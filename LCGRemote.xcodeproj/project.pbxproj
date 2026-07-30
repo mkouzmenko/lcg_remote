@@ -1,0 +1,761 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08D895A40064A430F89784D5 /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65607730BA3928E1D1F71371 /* PresetsView.swift */; };
+		0AE15185E395CAB935105155 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50648161C7EEDC65921DE889 /* OnboardingView.swift */; };
+		10E8D55FE3C642F6BC3030CB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B01A83615546F9D5327193 /* SettingsView.swift */; };
+		1C9C3C5937714A3251629A75 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04694E66B2D0101212E08182 /* Models.swift */; };
+		25560D126B2F91E0BA3C82F5 /* LCGRemoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */; };
+		27DEB2C34346884C6A7EAD7D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */; };
+		2862ADB9BE0AB1CAA47FF8FE /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */; };
+		2900F1CE0E11B62961366BC6 /* DeviceControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76958A56FEA27160517E036 /* DeviceControlView.swift */; };
+		2A35C9CD96DC7C67BF8AE160 /* MockBLEService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0240EF6FC1677FF9570B115A /* MockBLEService.swift */; };
+		2B910B5E7E6B4D7E52E66C61 /* CalibrationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BDA5C3B8FB8A1F1A727DD6 /* CalibrationViewModel.swift */; };
+		32CFE5397144B16076818F2A /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA271CBBA376C499A54BFCE /* Colors.swift */; };
+		3A435DD451376664EA4732E5 /* DeviceControlViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */; };
+		582F4C4A5D93E2196C8B3499 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61ECED58DAF6D5566D2DEBA /* ScanView.swift */; };
+		6A039CC423143FB33DC1CE11 /* ScanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392863540AB49BC5737A0B19 /* ScanViewModel.swift */; };
+		6EA60369DE2517026F76B8F6 /* PresetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */; };
+		748BF1AB1B8C19C3A0D897FE /* HapticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EB041A234EE283C46829AB /* HapticsService.swift */; };
+		8168F86DFE752AB45FEAEF31 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4AD5D7EC205E4A75C71BDEA /* WatchConnectivity.framework */; };
+		8B413DCE0CBBE30E08ABA6DB /* LCGRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6C861DC54EEA8E992A6ADC /* LCGRemoteApp.swift */; };
+		9AE17B0C49A1D8AE09B1536A /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0215CD2127FFAE250E63C63E /* SwiftData.framework */; };
+		9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */; };
+		A3855BD4300CE8C9AB9CF296 /* LCGRemoteWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */; };
+		A89F91E213F7221EABF5B6A6 /* LCGRemoteWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 61D738859710FEBB435068F5 /* LCGRemoteWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BDA085190D674031802D044D /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34431E84D4878B925CFE05ED /* SeedData.swift */; };
+		BFB16C901B59B786AD7C347E /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E98ADE9F6886E5C161A2B71D /* WatchConnectivity.framework */; };
+		CEDC506BA90547F07B942814 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52F417A6C7F2E9418077912 /* SettingsViewModel.swift */; };
+		D250FF230DC2661C6ACD8CD9 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA215857646A53A0AE807DD /* WatchContentView.swift */; };
+		F2471DEA7F857FD8BAFAFE20 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */; };
+		FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		70824917CE5C604417B6088B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEDE9FB9BC8FCE65478E114A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 72D85AB9D1196B0910E3C83A;
+			remoteInfo = LCGRemote;
+		};
+		9B5B7F595F2EA86350AC55E2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEDE9FB9BC8FCE65478E114A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2D5A99C34514FDED24B6175;
+			remoteInfo = LCGRemoteWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7DE7B8C024A1D535DE645D47 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				A89F91E213F7221EABF5B6A6 /* LCGRemoteWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0215CD2127FFAE250E63C63E /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
+		0240EF6FC1677FF9570B115A /* MockBLEService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBLEService.swift; sourceTree = "<group>"; };
+		04694E66B2D0101212E08182 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
+		0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0DA215857646A53A0AE807DD /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
+		114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteTests.swift; sourceTree = "<group>"; };
+		141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		22F45A974F264A7D97B344AB /* LCGRemote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LCGRemote.entitlements; sourceTree = "<group>"; };
+		304271130AA2506DB56B0EE6 /* LCGRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LCGRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsViewModel.swift; sourceTree = "<group>"; };
+		34431E84D4878B925CFE05ED /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
+		34BDA5C3B8FB8A1F1A727DD6 /* CalibrationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationViewModel.swift; sourceTree = "<group>"; };
+		392863540AB49BC5737A0B19 /* ScanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanViewModel.swift; sourceTree = "<group>"; };
+		41C83E84EFA444A61EAC90DC /* LCGRemoteTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LCGRemoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50648161C7EEDC65921DE889 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		54EB041A234EE283C46829AB /* HapticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsService.swift; sourceTree = "<group>"; };
+		58B01A83615546F9D5327193 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONPersistenceService.swift; sourceTree = "<group>"; };
+		61D738859710FEBB435068F5 /* LCGRemoteWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LCGRemoteWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CoreBluetooth.framework; sourceTree = "<group>"; };
+		65607730BA3928E1D1F71371 /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
+		A76958A56FEA27160517E036 /* DeviceControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlView.swift; sourceTree = "<group>"; };
+		ABA271CBBA376C499A54BFCE /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlViewModel.swift; sourceTree = "<group>"; };
+		C4AD5D7EC205E4A75C71BDEA /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		CE6C861DC54EEA8E992A6ADC /* LCGRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteApp.swift; sourceTree = "<group>"; };
+		D61ECED58DAF6D5566D2DEBA /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
+		E52F417A6C7F2E9418077912 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		E98ADE9F6886E5C161A2B71D /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WatchConnectivity.framework; sourceTree = "<group>"; };
+		EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteWatchApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		839DD1B92A63CD63C4188A77 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2471DEA7F857FD8BAFAFE20 /* CoreBluetooth.framework in Frameworks */,
+				BFB16C901B59B786AD7C347E /* WatchConnectivity.framework in Frameworks */,
+				9AE17B0C49A1D8AE09B1536A /* SwiftData.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D22E7E9FA71E0ED988889BB6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8168F86DFE752AB45FEAEF31 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		128B946DD33EF3B0C8F73DA6 /* Calibration */ = {
+			isa = PBXGroup;
+			children = (
+				078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */,
+			);
+			path = Calibration;
+			sourceTree = "<group>";
+		};
+		1358D065ED213F3207C8579F /* Control */ = {
+			isa = PBXGroup;
+			children = (
+				A76958A56FEA27160517E036 /* DeviceControlView.swift */,
+			);
+			path = Control;
+			sourceTree = "<group>";
+		};
+		2764AD569B1034541DB7798B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CE6C861DC54EEA8E992A6ADC /* LCGRemoteApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		2DD0BAB6148AD9D73C9F1A87 /* Presets */ = {
+			isa = PBXGroup;
+			children = (
+				65607730BA3928E1D1F71371 /* PresetsView.swift */,
+			);
+			path = Presets;
+			sourceTree = "<group>";
+		};
+		4D02A1B6EDC502241B1E8AE7 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */,
+				128B946DD33EF3B0C8F73DA6 /* Calibration */,
+				1358D065ED213F3207C8579F /* Control */,
+				B9985700CD662A9F3C0CDE78 /* Onboarding */,
+				2DD0BAB6148AD9D73C9F1A87 /* Presets */,
+				F59426814A94620FC6B2CCB3 /* Scan */,
+				C8184124635D398FDF0D099B /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		537C9C697190280FFAD0866C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				04694E66B2D0101212E08182 /* Models.swift */,
+				34431E84D4878B925CFE05ED /* SeedData.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		53B03732ED6FC7A97929F507 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				304271130AA2506DB56B0EE6 /* LCGRemote.app */,
+				41C83E84EFA444A61EAC90DC /* LCGRemoteTests.xctest */,
+				61D738859710FEBB435068F5 /* LCGRemoteWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		619DDCF662E5B6784256806F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				54EB041A234EE283C46829AB /* HapticsService.swift */,
+				5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */,
+				0240EF6FC1677FF9570B115A /* MockBLEService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		69C4E4BC634CEE725D01C946 /* LCGRemoteTests */ = {
+			isa = PBXGroup;
+			children = (
+				114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */,
+			);
+			path = LCGRemoteTests;
+			sourceTree = "<group>";
+		};
+		756C2A9E59D76E13742EDF08 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0DA215857646A53A0AE807DD /* WatchContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7C598DEF0E1A07F5DE6A5313 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				34BDA5C3B8FB8A1F1A727DD6 /* CalibrationViewModel.swift */,
+				B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */,
+				141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */,
+				32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */,
+				392863540AB49BC5737A0B19 /* ScanViewModel.swift */,
+				E52F417A6C7F2E9418077912 /* SettingsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		B5D0E4BAF3E1EA116EA3F0A7 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */,
+				756C2A9E59D76E13742EDF08 /* Views */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+		B9985700CD662A9F3C0CDE78 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				50648161C7EEDC65921DE889 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		C5951E67C2B184DC29DBEF6C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */,
+				0215CD2127FFAE250E63C63E /* SwiftData.framework */,
+				E98ADE9F6886E5C161A2B71D /* WatchConnectivity.framework */,
+				C4AD5D7EC205E4A75C71BDEA /* WatchConnectivity.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C8184124635D398FDF0D099B /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				58B01A83615546F9D5327193 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		EB62C78830A6BDA406E07CF2 = {
+			isa = PBXGroup;
+			children = (
+				FCA07A1BFFA9DEA2A2B78444 /* LCGRemote */,
+				69C4E4BC634CEE725D01C946 /* LCGRemoteTests */,
+				B5D0E4BAF3E1EA116EA3F0A7 /* Watch */,
+				C5951E67C2B184DC29DBEF6C /* Frameworks */,
+				53B03732ED6FC7A97929F507 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EF98D56299C11ADEED921728 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ABA271CBBA376C499A54BFCE /* Colors.swift */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		F59426814A94620FC6B2CCB3 /* Scan */ = {
+			isa = PBXGroup;
+			children = (
+				D61ECED58DAF6D5566D2DEBA /* ScanView.swift */,
+			);
+			path = Scan;
+			sourceTree = "<group>";
+		};
+		FCA07A1BFFA9DEA2A2B78444 /* LCGRemote */ = {
+			isa = PBXGroup;
+			children = (
+				22F45A974F264A7D97B344AB /* LCGRemote.entitlements */,
+				2764AD569B1034541DB7798B /* App */,
+				537C9C697190280FFAD0866C /* Models */,
+				EF98D56299C11ADEED921728 /* Resources */,
+				619DDCF662E5B6784256806F /* Services */,
+				7C598DEF0E1A07F5DE6A5313 /* ViewModels */,
+				4D02A1B6EDC502241B1E8AE7 /* Views */,
+			);
+			path = LCGRemote;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2CC72CB37046FBC7B29B4892 /* LCGRemoteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0458FBB38F81471171F7559C /* Build configuration list for PBXNativeTarget "LCGRemoteTests" */;
+			buildPhases = (
+				0ECAE0592ADBE00D497F9499 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F4DE0D42619FF0A921B438DF /* PBXTargetDependency */,
+			);
+			name = LCGRemoteTests;
+			packageProductDependencies = (
+			);
+			productName = LCGRemoteTests;
+			productReference = 41C83E84EFA444A61EAC90DC /* LCGRemoteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		72D85AB9D1196B0910E3C83A /* LCGRemote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39E57F765AE8A9C8620CD6F9 /* Build configuration list for PBXNativeTarget "LCGRemote" */;
+			buildPhases = (
+				667CEA6D45404F9FAC84E79C /* Sources */,
+				839DD1B92A63CD63C4188A77 /* Frameworks */,
+				7DE7B8C024A1D535DE645D47 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DEA1A26D8CA5FEA0D63706B9 /* PBXTargetDependency */,
+			);
+			name = LCGRemote;
+			packageProductDependencies = (
+			);
+			productName = LCGRemote;
+			productReference = 304271130AA2506DB56B0EE6 /* LCGRemote.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F2D5A99C34514FDED24B6175 /* LCGRemoteWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C24C9ADF0AD006EE5BEF2C7 /* Build configuration list for PBXNativeTarget "LCGRemoteWatch" */;
+			buildPhases = (
+				5FFD13065088F79A8C9B1B02 /* Sources */,
+				D22E7E9FA71E0ED988889BB6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LCGRemoteWatch;
+			packageProductDependencies = (
+			);
+			productName = LCGRemoteWatch;
+			productReference = 61D738859710FEBB435068F5 /* LCGRemoteWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DEDE9FB9BC8FCE65478E114A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					72D85AB9D1196B0910E3C83A = {
+						DevelopmentTeam = "";
+					};
+					F2D5A99C34514FDED24B6175 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 0ECB401F4464A6DBC3063143 /* Build configuration list for PBXProject "LCGRemote" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = EB62C78830A6BDA406E07CF2;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 53B03732ED6FC7A97929F507 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				72D85AB9D1196B0910E3C83A /* LCGRemote */,
+				F2D5A99C34514FDED24B6175 /* LCGRemoteWatch */,
+				2CC72CB37046FBC7B29B4892 /* LCGRemoteTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0ECAE0592ADBE00D497F9499 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25560D126B2F91E0BA3C82F5 /* LCGRemoteTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5FFD13065088F79A8C9B1B02 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A3855BD4300CE8C9AB9CF296 /* LCGRemoteWatchApp.swift in Sources */,
+				D250FF230DC2661C6ACD8CD9 /* WatchContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		667CEA6D45404F9FAC84E79C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */,
+				2B910B5E7E6B4D7E52E66C61 /* CalibrationViewModel.swift in Sources */,
+				32CFE5397144B16076818F2A /* Colors.swift in Sources */,
+				27DEB2C34346884C6A7EAD7D /* ContentView.swift in Sources */,
+				2900F1CE0E11B62961366BC6 /* DeviceControlView.swift in Sources */,
+				3A435DD451376664EA4732E5 /* DeviceControlViewModel.swift in Sources */,
+				748BF1AB1B8C19C3A0D897FE /* HapticsService.swift in Sources */,
+				FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */,
+				8B413DCE0CBBE30E08ABA6DB /* LCGRemoteApp.swift in Sources */,
+				2A35C9CD96DC7C67BF8AE160 /* MockBLEService.swift in Sources */,
+				1C9C3C5937714A3251629A75 /* Models.swift in Sources */,
+				0AE15185E395CAB935105155 /* OnboardingView.swift in Sources */,
+				2862ADB9BE0AB1CAA47FF8FE /* OnboardingViewModel.swift in Sources */,
+				08D895A40064A430F89784D5 /* PresetsView.swift in Sources */,
+				6EA60369DE2517026F76B8F6 /* PresetsViewModel.swift in Sources */,
+				582F4C4A5D93E2196C8B3499 /* ScanView.swift in Sources */,
+				6A039CC423143FB33DC1CE11 /* ScanViewModel.swift in Sources */,
+				BDA085190D674031802D044D /* SeedData.swift in Sources */,
+				10E8D55FE3C642F6BC3030CB /* SettingsView.swift in Sources */,
+				CEDC506BA90547F07B942814 /* SettingsViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DEA1A26D8CA5FEA0D63706B9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2D5A99C34514FDED24B6175 /* LCGRemoteWatch */;
+			targetProxy = 9B5B7F595F2EA86350AC55E2 /* PBXContainerItemProxy */;
+		};
+		F4DE0D42619FF0A921B438DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 72D85AB9D1196B0910E3C83A /* LCGRemote */;
+			targetProxy = 70824917CE5C604417B6088B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		06F0F4C3FCE2AF50FBF09930 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LCGRemote/LCGRemote.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LCG Remote needs Bluetooth to communicate with your lift controller.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1176965EC7BD6EDEE8E944EA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.LCGRemoteTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LCGRemote.app/LCGRemote";
+			};
+			name = Release;
+		};
+		664110CBA02180BAA5BB6878 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		723080AFCEF3214DF271DA1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LCGRemote/LCGRemote.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LCG Remote needs Bluetooth to communicate with your lift controller.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7C49CA0F6D0A25B1E6636330 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
+		BE0FFFE8FE91C0760FE93E8E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchsimulator watchos";
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
+		BE199DF5EDB64A0C7907115D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.LCGRemoteTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LCGRemote.app/LCGRemote";
+			};
+			name = Debug;
+		};
+		C12D393833F4F12DE2923AB0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION = YES;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchsimulator watchos";
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0458FBB38F81471171F7559C /* Build configuration list for PBXNativeTarget "LCGRemoteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BE199DF5EDB64A0C7907115D /* Debug */,
+				1176965EC7BD6EDEE8E944EA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		0ECB401F4464A6DBC3063143 /* Build configuration list for PBXProject "LCGRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				664110CBA02180BAA5BB6878 /* Debug */,
+				7C49CA0F6D0A25B1E6636330 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		39E57F765AE8A9C8620CD6F9 /* Build configuration list for PBXNativeTarget "LCGRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06F0F4C3FCE2AF50FBF09930 /* Debug */,
+				723080AFCEF3214DF271DA1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9C24C9ADF0AD006EE5BEF2C7 /* Build configuration list for PBXNativeTarget "LCGRemoteWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C12D393833F4F12DE2923AB0 /* Debug */,
+				BE0FFFE8FE91C0760FE93E8E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DEDE9FB9BC8FCE65478E114A /* Project object */;
+}
