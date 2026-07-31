@@ -35,7 +35,6 @@ targets:
       properties:
         com.apple.developer.bluetooth.central: true
     dependencies:
-      - target: LCGRemoteWatch
       - framework: CoreBluetooth.framework
         embed: false
       - framework: WatchConnectivity.framework
@@ -61,6 +60,7 @@ targets:
         WATCHOS_DEPLOYMENT_TARGET: "9.0"
         SDKROOT: watchos
         SUPPORTED_PLATFORMS: "watchsimulator watchos"
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.liftcontrolgate.lcgremote
     dependencies:
       - sdk: WatchConnectivity.framework
         embed: false

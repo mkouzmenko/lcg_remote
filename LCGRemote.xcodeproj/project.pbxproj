@@ -16,24 +16,38 @@
 		2862ADB9BE0AB1CAA47FF8FE /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */; };
 		2900F1CE0E11B62961366BC6 /* DeviceControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76958A56FEA27160517E036 /* DeviceControlView.swift */; };
 		2A35C9CD96DC7C67BF8AE160 /* MockBLEService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0240EF6FC1677FF9570B115A /* MockBLEService.swift */; };
+		2A853D4345156D8D4F80AEFE /* WatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 321C5BC1106A067BF6E3C2D6 /* WatchSessionManager.swift */; };
 		2B910B5E7E6B4D7E52E66C61 /* CalibrationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BDA5C3B8FB8A1F1A727DD6 /* CalibrationViewModel.swift */; };
 		32CFE5397144B16076818F2A /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA271CBBA376C499A54BFCE /* Colors.swift */; };
+		3994CB7B07A2685831CCD4D9 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F527B00B97EF904CDEA9BD89 /* ShortcutsProvider.swift */; };
+		39EABFA67EFFFEDF376C205E /* StatusMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF65586AAD2453C48F5CC8C /* StatusMonitor.swift */; };
 		3A435DD451376664EA4732E5 /* DeviceControlViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */; };
+		3A5278EAF0480A45AB2D891F /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1097E0EF1452C95967DE8B17 /* SharedModels.swift */; };
+		466DFE13A68065F7AA3517F7 /* BLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3310EAAFF8CE35E3C1E54530 /* BLEManager.swift */; };
 		582F4C4A5D93E2196C8B3499 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61ECED58DAF6D5566D2DEBA /* ScanView.swift */; };
 		6A039CC423143FB33DC1CE11 /* ScanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 392863540AB49BC5737A0B19 /* ScanViewModel.swift */; };
+		6D4030752E71B8C8DA13EDB0 /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7FD56513DAEE9D1A11E076 /* PersistenceService.swift */; };
 		6EA60369DE2517026F76B8F6 /* PresetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */; };
 		748BF1AB1B8C19C3A0D897FE /* HapticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EB041A234EE283C46829AB /* HapticsService.swift */; };
+		7B9DCADDAE3D394BDB26756E /* DiagnosticsLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B2358D47DBA72E49064DB3 /* DiagnosticsLogger.swift */; };
 		8168F86DFE752AB45FEAEF31 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4AD5D7EC205E4A75C71BDEA /* WatchConnectivity.framework */; };
 		8B413DCE0CBBE30E08ABA6DB /* LCGRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6C861DC54EEA8E992A6ADC /* LCGRemoteApp.swift */; };
 		9AE17B0C49A1D8AE09B1536A /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0215CD2127FFAE250E63C63E /* SwiftData.framework */; };
 		9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */; };
+		A247808B233670720DC6521D /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45715F011F784E83D4D12129 /* StatusView.swift */; };
 		A3855BD4300CE8C9AB9CF296 /* LCGRemoteWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */; };
-		A89F91E213F7221EABF5B6A6 /* LCGRemoteWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 61D738859710FEBB435068F5 /* LCGRemoteWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B84A26A79228516C3C370CFE /* PresetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA262423AAC39E6AC667489 /* PresetListView.swift */; };
+		BB24D9972E420CC4FEE6B735 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F28639758409808890D1 /* SwiftDataModels.swift */; };
 		BDA085190D674031802D044D /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34431E84D4878B925CFE05ED /* SeedData.swift */; };
 		BFB16C901B59B786AD7C347E /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E98ADE9F6886E5C161A2B71D /* WatchConnectivity.framework */; };
+		C08774D0B050C39B5D8C64D2 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 591290702E7C7C0FAEEEF716 /* WatchConnectivityService.swift */; };
 		CEDC506BA90547F07B942814 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52F417A6C7F2E9418077912 /* SettingsViewModel.swift */; };
 		D250FF230DC2661C6ACD8CD9 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA215857646A53A0AE807DD /* WatchContentView.swift */; };
+		D49786FA277D0B06027F7A51 /* LCGComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350E4E632BC17FC08B51450 /* LCGComplication.swift */; };
+		E2E4CA9C42AD00E3DE465B74 /* ElevatorIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4769F4E06073A4F0AA3B96A9 /* ElevatorIntents.swift */; };
+		E803AD82E2428506EEB57D65 /* CommandEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */; };
 		F2471DEA7F857FD8BAFAFE20 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */; };
+		F45C613433A159393FE467EB /* BLETypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25DA52F47D2D348EF9398C4 /* BLETypes.swift */; };
 		FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */; };
 /* End PBXBuildFile section */
 
@@ -45,28 +59,7 @@
 			remoteGlobalIDString = 72D85AB9D1196B0910E3C83A;
 			remoteInfo = LCGRemote;
 		};
-		9B5B7F595F2EA86350AC55E2 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEDE9FB9BC8FCE65478E114A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F2D5A99C34514FDED24B6175;
-			remoteInfo = LCGRemoteWatch;
-		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		7DE7B8C024A1D535DE645D47 /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				A89F91E213F7221EABF5B6A6 /* LCGRemoteWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0215CD2127FFAE250E63C63E /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
@@ -75,22 +68,35 @@
 		078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
 		0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0DA215857646A53A0AE807DD /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
+		1097E0EF1452C95967DE8B17 /* SharedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModels.swift; sourceTree = "<group>"; };
 		114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteTests.swift; sourceTree = "<group>"; };
 		141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		22F45A974F264A7D97B344AB /* LCGRemote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LCGRemote.entitlements; sourceTree = "<group>"; };
 		304271130AA2506DB56B0EE6 /* LCGRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LCGRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		321C5BC1106A067BF6E3C2D6 /* WatchSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionManager.swift; sourceTree = "<group>"; };
 		32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsViewModel.swift; sourceTree = "<group>"; };
+		3310EAAFF8CE35E3C1E54530 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
 		34431E84D4878B925CFE05ED /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		34BDA5C3B8FB8A1F1A727DD6 /* CalibrationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationViewModel.swift; sourceTree = "<group>"; };
 		392863540AB49BC5737A0B19 /* ScanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanViewModel.swift; sourceTree = "<group>"; };
 		41C83E84EFA444A61EAC90DC /* LCGRemoteTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LCGRemoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		45715F011F784E83D4D12129 /* StatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusView.swift; sourceTree = "<group>"; };
+		4769F4E06073A4F0AA3B96A9 /* ElevatorIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevatorIntents.swift; sourceTree = "<group>"; };
+		47B2358D47DBA72E49064DB3 /* DiagnosticsLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsLogger.swift; sourceTree = "<group>"; };
+		4FF65586AAD2453C48F5CC8C /* StatusMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMonitor.swift; sourceTree = "<group>"; };
 		50648161C7EEDC65921DE889 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		54EB041A234EE283C46829AB /* HapticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsService.swift; sourceTree = "<group>"; };
 		58B01A83615546F9D5327193 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		591290702E7C7C0FAEEEF716 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONPersistenceService.swift; sourceTree = "<group>"; };
 		61D738859710FEBB435068F5 /* LCGRemoteWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LCGRemoteWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CoreBluetooth.framework; sourceTree = "<group>"; };
 		65607730BA3928E1D1F71371 /* PresetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsView.swift; sourceTree = "<group>"; };
+		6985F28639758409808890D1 /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
+		8DA262423AAC39E6AC667489 /* PresetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetListView.swift; sourceTree = "<group>"; };
+		957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandEncoder.swift; sourceTree = "<group>"; };
+		9E7FD56513DAEE9D1A11E076 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		A350E4E632BC17FC08B51450 /* LCGComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGComplication.swift; sourceTree = "<group>"; };
 		A76958A56FEA27160517E036 /* DeviceControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlView.swift; sourceTree = "<group>"; };
 		ABA271CBBA376C499A54BFCE /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlViewModel.swift; sourceTree = "<group>"; };
@@ -100,6 +106,8 @@
 		E52F417A6C7F2E9418077912 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		E98ADE9F6886E5C161A2B71D /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WatchConnectivity.framework; sourceTree = "<group>"; };
 		EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteWatchApp.swift; sourceTree = "<group>"; };
+		F25DA52F47D2D348EF9398C4 /* BLETypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLETypes.swift; sourceTree = "<group>"; };
+		F527B00B97EF904CDEA9BD89 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +156,15 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		2D81FEDC7F2DE51ECFC0E2FA /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				4769F4E06073A4F0AA3B96A9 /* ElevatorIntents.swift */,
+				F527B00B97EF904CDEA9BD89 /* ShortcutsProvider.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		2DD0BAB6148AD9D73C9F1A87 /* Presets */ = {
 			isa = PBXGroup;
 			children = (
@@ -173,8 +190,10 @@
 		537C9C697190280FFAD0866C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				F25DA52F47D2D348EF9398C4 /* BLETypes.swift */,
 				04694E66B2D0101212E08182 /* Models.swift */,
 				34431E84D4878B925CFE05ED /* SeedData.swift */,
+				6985F28639758409808890D1 /* SwiftDataModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -192,9 +211,15 @@
 		619DDCF662E5B6784256806F /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				3310EAAFF8CE35E3C1E54530 /* BLEManager.swift */,
+				957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */,
+				47B2358D47DBA72E49064DB3 /* DiagnosticsLogger.swift */,
 				54EB041A234EE283C46829AB /* HapticsService.swift */,
 				5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */,
 				0240EF6FC1677FF9570B115A /* MockBLEService.swift */,
+				9E7FD56513DAEE9D1A11E076 /* PersistenceService.swift */,
+				4FF65586AAD2453C48F5CC8C /* StatusMonitor.swift */,
+				591290702E7C7C0FAEEEF716 /* WatchConnectivityService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -210,6 +235,8 @@
 		756C2A9E59D76E13742EDF08 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				8DA262423AAC39E6AC667489 /* PresetListView.swift */,
+				45715F011F784E83D4D12129 /* StatusView.swift */,
 				0DA215857646A53A0AE807DD /* WatchContentView.swift */,
 			);
 			path = Views;
@@ -232,6 +259,9 @@
 			isa = PBXGroup;
 			children = (
 				EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */,
+				321C5BC1106A067BF6E3C2D6 /* WatchSessionManager.swift */,
+				E8880E8FF1425D6B884D5B00 /* Complication */,
+				FBEDAEE243DF7EEA945887C7 /* Models */,
 				756C2A9E59D76E13742EDF08 /* Views */,
 			);
 			path = Watch;
@@ -264,6 +294,14 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		E8880E8FF1425D6B884D5B00 /* Complication */ = {
+			isa = PBXGroup;
+			children = (
+				A350E4E632BC17FC08B51450 /* LCGComplication.swift */,
+			);
+			path = Complication;
+			sourceTree = "<group>";
+		};
 		EB62C78830A6BDA406E07CF2 = {
 			isa = PBXGroup;
 			children = (
@@ -291,11 +329,20 @@
 			path = Scan;
 			sourceTree = "<group>";
 		};
+		FBEDAEE243DF7EEA945887C7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1097E0EF1452C95967DE8B17 /* SharedModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		FCA07A1BFFA9DEA2A2B78444 /* LCGRemote */ = {
 			isa = PBXGroup;
 			children = (
 				22F45A974F264A7D97B344AB /* LCGRemote.entitlements */,
 				2764AD569B1034541DB7798B /* App */,
+				2D81FEDC7F2DE51ECFC0E2FA /* Intents */,
 				537C9C697190280FFAD0866C /* Models */,
 				EF98D56299C11ADEED921728 /* Resources */,
 				619DDCF662E5B6784256806F /* Services */,
@@ -332,12 +379,10 @@
 			buildPhases = (
 				667CEA6D45404F9FAC84E79C /* Sources */,
 				839DD1B92A63CD63C4188A77 /* Frameworks */,
-				7DE7B8C024A1D535DE645D47 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DEA1A26D8CA5FEA0D63706B9 /* PBXTargetDependency */,
 			);
 			name = LCGRemote;
 			packageProductDependencies = (
@@ -415,8 +460,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D49786FA277D0B06027F7A51 /* LCGComplication.swift in Sources */,
 				A3855BD4300CE8C9AB9CF296 /* LCGRemoteWatchApp.swift in Sources */,
+				B84A26A79228516C3C370CFE /* PresetListView.swift in Sources */,
+				3A5278EAF0480A45AB2D891F /* SharedModels.swift in Sources */,
+				A247808B233670720DC6521D /* StatusView.swift in Sources */,
 				D250FF230DC2661C6ACD8CD9 /* WatchContentView.swift in Sources */,
+				2A853D4345156D8D4F80AEFE /* WatchSessionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,12 +474,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				466DFE13A68065F7AA3517F7 /* BLEManager.swift in Sources */,
+				F45C613433A159393FE467EB /* BLETypes.swift in Sources */,
 				9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */,
 				2B910B5E7E6B4D7E52E66C61 /* CalibrationViewModel.swift in Sources */,
 				32CFE5397144B16076818F2A /* Colors.swift in Sources */,
+				E803AD82E2428506EEB57D65 /* CommandEncoder.swift in Sources */,
 				27DEB2C34346884C6A7EAD7D /* ContentView.swift in Sources */,
 				2900F1CE0E11B62961366BC6 /* DeviceControlView.swift in Sources */,
 				3A435DD451376664EA4732E5 /* DeviceControlViewModel.swift in Sources */,
+				7B9DCADDAE3D394BDB26756E /* DiagnosticsLogger.swift in Sources */,
+				E2E4CA9C42AD00E3DE465B74 /* ElevatorIntents.swift in Sources */,
 				748BF1AB1B8C19C3A0D897FE /* HapticsService.swift in Sources */,
 				FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */,
 				8B413DCE0CBBE30E08ABA6DB /* LCGRemoteApp.swift in Sources */,
@@ -437,6 +492,7 @@
 				1C9C3C5937714A3251629A75 /* Models.swift in Sources */,
 				0AE15185E395CAB935105155 /* OnboardingView.swift in Sources */,
 				2862ADB9BE0AB1CAA47FF8FE /* OnboardingViewModel.swift in Sources */,
+				6D4030752E71B8C8DA13EDB0 /* PersistenceService.swift in Sources */,
 				08D895A40064A430F89784D5 /* PresetsView.swift in Sources */,
 				6EA60369DE2517026F76B8F6 /* PresetsViewModel.swift in Sources */,
 				582F4C4A5D93E2196C8B3499 /* ScanView.swift in Sources */,
@@ -444,17 +500,16 @@
 				BDA085190D674031802D044D /* SeedData.swift in Sources */,
 				10E8D55FE3C642F6BC3030CB /* SettingsView.swift in Sources */,
 				CEDC506BA90547F07B942814 /* SettingsViewModel.swift in Sources */,
+				3994CB7B07A2685831CCD4D9 /* ShortcutsProvider.swift in Sources */,
+				39EABFA67EFFFEDF376C205E /* StatusMonitor.swift in Sources */,
+				BB24D9972E420CC4FEE6B735 /* SwiftDataModels.swift in Sources */,
+				C08774D0B050C39B5D8C64D2 /* WatchConnectivityService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		DEA1A26D8CA5FEA0D63706B9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F2D5A99C34514FDED24B6175 /* LCGRemoteWatch */;
-			targetProxy = 9B5B7F595F2EA86350AC55E2 /* PBXContainerItemProxy */;
-		};
 		F4DE0D42619FF0A921B438DF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 72D85AB9D1196B0910E3C83A /* LCGRemote */;
@@ -670,6 +725,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.liftcontrolgate.lcgremote;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote.watchkitapp;
 				SDKROOT = watchos;
@@ -706,6 +762,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.liftcontrolgate.lcgremote;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.liftcontrolgate.lcgremote.watchkitapp;
 				SDKROOT = watchos;
