@@ -176,18 +176,31 @@ final class BLEManager: NSObject, ObservableObject {
     func write(data: Data, to peripheral: CBPeripheral) async throws {
         let peripheralID = peripheral.identifier
 
-        // Determine which service UUID to look for based on connected device type
+        // Find the writable characteristic for this peripheral.
+        // First try by known service UUIDs, then fall back to any stored characteristic.
         let serviceCharUUID: CBUUID
         if connectedInterior?.peripheral.identifier == peripheralID {
             serviceCharUUID = BLEConstants.interiorServiceCBUUID
         } else if connectedExterior?.peripheral.identifier == peripheralID {
             serviceCharUUID = BLEConstants.exteriorServiceCBUUID
         } else {
-            throw CommandError.notConnected
+            // Fallback: use the shared LCG service UUID directly
+            serviceCharUUID = BLEConstants.lcgServiceCBUUID
         }
 
         guard let characteristic = peripheralCharacteristics[peripheralID]?[serviceCharUUID] else {
-            throw CommandError.notConnected
+            // Last fallback: find any writable characteristic for this peripheral
+            guard let anyCharacteristic = peripheralCharacteristics[peripheralID]?.values.first(where: {
+                $0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse)
+            }) else {
+                throw CommandError.notConnected
+            }
+            
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                self.writeContinuations[peripheralID] = continuation
+                peripheral.writeValue(data, for: anyCharacteristic, type: .withResponse)
+            }
+            return
         }
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

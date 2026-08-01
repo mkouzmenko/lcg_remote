@@ -368,80 +368,61 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         statusMessage = "Connecting..."
 
         Task {
-            // Load device groups config to determine which device to use
+            // 1. Load device group config
             let persistenceService = JSONPersistenceService()
             let deviceGroups = persistenceService.loadDeviceGroups()
 
+            // 2. Determine target device ID and name from groups
             let targetDeviceID: String?
+            let targetName: String?
             switch buttonConfig.deviceType {
             case .interior:
                 targetDeviceID = deviceGroups.interiorDeviceID
+                targetName = deviceGroups.interiorDeviceName
             case .exterior:
                 targetDeviceID = deviceGroups.exteriorDeviceID
+                targetName = deviceGroups.exteriorDeviceName
             }
 
-            // If a specific device ID is configured in the group, try to find it
-            let targetDevice: DiscoveredDevice?
-            if let deviceID = targetDeviceID {
-                // Look up the specific device from discovered devices
-                targetDevice = discoveredDeviceLookup[deviceID]
-            } else {
-                // Fallback: find the first device matching the type
-                targetDevice = discoveredDeviceLookup.values.first { discovered in
-                    let bleDevice = BLEDevice(from: discovered)
-                    return bleDevice.unitType == buttonConfig.deviceType
-                }
-            }
+            // 3. Find the DiscoveredDevice using priority: ID → name → type
+            var discoveredDevice: DiscoveredDevice? = findDevice(
+                deviceID: targetDeviceID,
+                name: targetName,
+                unitType: buttonConfig.deviceType
+            )
 
-            if targetDevice == nil {
-                // Try scanning for the device
+            // 4. If not found, scan for 8 seconds and retry
+            if discoveredDevice == nil {
                 bleManager.startScan()
                 for _ in 0..<16 {
                     try? await Task.sleep(nanoseconds: 500_000_000)
-                    let found: DiscoveredDevice?
-                    if let deviceID = targetDeviceID {
-                        found = discoveredDeviceLookup[deviceID]
-                    } else {
-                        found = discoveredDeviceLookup.values.first { discovered in
-                            let bleDevice = BLEDevice(from: discovered)
-                            return bleDevice.unitType == buttonConfig.deviceType
-                        }
+                    if let found = findDevice(deviceID: targetDeviceID, name: targetName, unitType: buttonConfig.deviceType) {
+                        discoveredDevice = found
+                        break
                     }
-                    if found != nil { break }
                 }
                 bleManager.stopScan()
             }
 
-            // Re-check after scan
-            let device: DiscoveredDevice?
-            if let deviceID = targetDeviceID {
-                device = discoveredDeviceLookup[deviceID]
-            } else {
-                device = discoveredDeviceLookup.values.first { discovered in
-                    let bleDevice = BLEDevice(from: discovered)
-                    return bleDevice.unitType == buttonConfig.deviceType
-                }
-            }
-
-            guard let discoveredDevice = device else {
+            // 5. If still not found, show error and return
+            guard let device = discoveredDevice else {
                 self.deviceStatus = .error
-                self.statusMessage = "Device not found. Check Device Groups in Settings."
+                self.statusMessage = "Device not found. Tap Scan in Settings."
                 self.scheduleAutoReset()
                 return
             }
 
-            // Connect (always reconnect to ensure we're talking to the right device)
-            do {
-                // Disconnect any existing connection first
-                if let interior = bleManager.connectedInterior, buttonConfig.deviceType == .interior {
-                    bleManager.disconnect(from: interior)
-                }
-                if let exterior = bleManager.connectedExterior, buttonConfig.deviceType == .exterior {
-                    bleManager.disconnect(from: exterior)
-                }
+            // 6. Disconnect ALL existing connections before connecting
+            if let interior = bleManager.connectedInterior {
+                bleManager.disconnect(from: interior)
+            }
+            if let exterior = bleManager.connectedExterior {
+                bleManager.disconnect(from: exterior)
+            }
 
-                try await bleManager.connect(to: discoveredDevice)
-                try? await Task.sleep(nanoseconds: 500_000_000)
+            // 7. Connect to the found device
+            do {
+                try await bleManager.connect(to: device)
             } catch {
                 self.deviceStatus = .error
                 self.statusMessage = "Connection failed."
@@ -452,10 +433,8 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             self.connectionState = .connected
             self.statusMessage = "Sending command..."
 
-            // Use the peripheral we connected to directly (avoids classification issues)
-            let peripheral = discoveredDevice.peripheral
-
-            // Send X, Y, Z as 3 sequential byte writes (raw values)
+            // 9. Write X, Y, Z as 3 sequential raw bytes directly to the peripheral
+            let peripheral = device.peripheral
             do {
                 let chunks = try CommandEncoder.encodeFloorCommand(
                     x: UInt8(buttonConfig.x),
@@ -465,6 +444,7 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 for chunk in chunks {
                     try await bleManager.write(data: chunk, to: peripheral)
                 }
+                // 10. Show done status and auto-reset
                 self.deviceStatus = .done
                 self.statusMessage = buttonConfig.deviceType == .exterior ? "Elevator called" : "Floor selected"
                 self.scheduleAutoReset()
@@ -474,6 +454,20 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 self.scheduleAutoReset()
             }
         }
+    }
+
+    /// Finds a DiscoveredDevice using priority: deviceID → name → unitType.
+    private func findDevice(deviceID: String?, name: String?, unitType: UnitType) -> DiscoveredDevice? {
+        // a. Look up by deviceID
+        if let id = deviceID, let found = discoveredDeviceLookup[id] {
+            return found
+        }
+        // b. Look up by name
+        if let name = name, let found = discoveredDeviceLookup.values.first(where: { $0.name == name }) {
+            return found
+        }
+        // c. Look up by type (first device with matching unitType)
+        return discoveredDeviceLookup.values.first { $0.unitType == unitType }
     }
 
     // MARK: - Status Notification Handling
