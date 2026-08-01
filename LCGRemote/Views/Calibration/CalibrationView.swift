@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Displays and manages floor profile calibration: list, add, edit, delete, reorder, and test.
+/// Displays and manages calibration settings:
+/// - Exterior device ID and call button position
+/// - Interior device ID and floor profiles (add, edit, delete, reorder, test)
 struct CalibrationView: View {
     @StateObject private var viewModel: CalibrationViewModel<BLEService>
     @EnvironmentObject var bleService: BLEService
@@ -9,6 +11,13 @@ struct CalibrationView: View {
     @State private var profileToEdit: FloorProfile? = nil
     @State private var profileToDelete: FloorProfile? = nil
     @State private var showDeleteConfirmation = false
+
+    // Device ID state
+    @State private var exteriorDeviceID: String = ""
+    @State private var interiorDeviceID: String = ""
+
+    private static var exteriorDeviceKey: String { "pairedExteriorDeviceID" }
+    private static var interiorDeviceKey: String { "pairedInteriorDeviceID" }
 
     init(bleService: BLEService, persistenceService: JSONPersistenceService) {
         _viewModel = StateObject(wrappedValue: CalibrationViewModel(
@@ -19,37 +28,10 @@ struct CalibrationView: View {
 
     var body: some View {
         List {
-            // Show call button calibration for exterior units
-            if let device = bleService.connectedDevice, device.unitType == .exterior {
-                Section {
-                    callButtonCalibrationRow
-                } header: {
-                    Text("Call Button Position")
-                        .accessibilityAddTraits(.isHeader)
-                }
-            }
-
-            Section {
-                ForEach(viewModel.profiles) { profile in
-                    CalibrationRowView(
-                        profile: profile,
-                        onTest: { viewModel.testProfile(profile) },
-                        onTap: { profileToEdit = profile }
-                    )
-                }
-                .onDelete { indexSet in
-                    if let index = indexSet.first {
-                        profileToDelete = viewModel.profiles[index]
-                        showDeleteConfirmation = true
-                    }
-                }
-                .onMove { source, destination in
-                    viewModel.reorderProfiles(from: source, to: destination)
-                }
-            } header: {
-                Text("Floor Profiles")
-                    .accessibilityAddTraits(.isHeader)
-            }
+            exteriorDeviceSection
+            callButtonSection
+            interiorDeviceSection
+            floorProfilesSection
         }
         .navigationTitle("Calibration")
         .toolbar {
@@ -107,42 +89,177 @@ struct CalibrationView: View {
                 CallButtonCalibrationForm(bleService: bleService)
             }
         }
+        .onAppear {
+            exteriorDeviceID = UserDefaults.standard.string(forKey: Self.exteriorDeviceKey) ?? ""
+            interiorDeviceID = UserDefaults.standard.string(forKey: Self.interiorDeviceKey) ?? ""
+        }
     }
 
-    // MARK: - Call Button Calibration Row
+    // MARK: - Exterior Device Section
 
-    private var callButtonCalibrationRow: some View {
-        Button {
-            showingCallButtonForm = true
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Call Elevator")
-                        .font(.headline)
-                    if let profile = bleService.callButtonProfile {
-                        Text("X: \(profile.x)  Y: \(profile.y)  Z: \(profile.z)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("Not calibrated")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
+    private var exteriorDeviceSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("Exterior Device ID", text: $exteriorDeviceID)
+                    .font(.system(.body, design: .monospaced))
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .accessibilityLabel("Exterior device identifier")
+                    .accessibilityHint("Enter the UUID of the exterior BLE device")
+                    .onChange(of: exteriorDeviceID) { newValue in
+                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if trimmed.isEmpty {
+                            UserDefaults.standard.removeObject(forKey: Self.exteriorDeviceKey)
+                        } else {
+                            UserDefaults.standard.set(trimmed, forKey: Self.exteriorDeviceKey)
+                        }
+                    }
+
+                // Show discovered exterior devices as quick-pick options
+                let exteriorDevices = bleService.discoveredDevices.filter { $0.unitType == .exterior }
+                if !exteriorDevices.isEmpty {
+                    Text("Discovered devices:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ForEach(exteriorDevices) { device in
+                        Button {
+                            exteriorDeviceID = device.id
+                            UserDefaults.standard.set(device.id, forKey: Self.exteriorDeviceKey)
+                        } label: {
+                            HStack {
+                                Text(device.name)
+                                    .font(.caption)
+                                Spacer()
+                                Text(device.id.prefix(8) + "...")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityLabel("Select \(device.name)")
                     }
                 }
-                Spacer()
-                Button {
-                    bleService.executeCallCommand()
-                } label: {
-                    Text("Test")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-                .buttonStyle(.bordered)
             }
+        } header: {
+            Text("Exterior Device")
+                .accessibilityAddTraits(.isHeader)
+        } footer: {
+            Text("The BLE device used for calling the elevator. Find the ID in the Scan tab.")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Call Elevator calibration")
-        .accessibilityHint("Double-tap to set position coordinates")
+    }
+
+    // MARK: - Call Button Section
+
+    private var callButtonSection: some View {
+        Section {
+            Button {
+                showingCallButtonForm = true
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Call Elevator")
+                            .font(.headline)
+                        if let profile = bleService.callButtonProfile {
+                            Text("X: \(profile.x)  Y: \(profile.y)  Z: \(profile.z)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Not calibrated")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Call Elevator calibration")
+            .accessibilityHint("Double-tap to set position coordinates")
+        } header: {
+            Text("Call Button Position")
+                .accessibilityAddTraits(.isHeader)
+        }
+    }
+
+    // MARK: - Interior Device Section
+
+    private var interiorDeviceSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("Interior Device ID", text: $interiorDeviceID)
+                    .font(.system(.body, design: .monospaced))
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .accessibilityLabel("Interior device identifier")
+                    .accessibilityHint("Enter the UUID of the interior BLE device")
+                    .onChange(of: interiorDeviceID) { newValue in
+                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if trimmed.isEmpty {
+                            UserDefaults.standard.removeObject(forKey: Self.interiorDeviceKey)
+                        } else {
+                            UserDefaults.standard.set(trimmed, forKey: Self.interiorDeviceKey)
+                        }
+                    }
+
+                // Show discovered interior devices as quick-pick options
+                let interiorDevices = bleService.discoveredDevices.filter { $0.unitType == .interior }
+                if !interiorDevices.isEmpty {
+                    Text("Discovered devices:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ForEach(interiorDevices) { device in
+                        Button {
+                            interiorDeviceID = device.id
+                            UserDefaults.standard.set(device.id, forKey: Self.interiorDeviceKey)
+                        } label: {
+                            HStack {
+                                Text(device.name)
+                                    .font(.caption)
+                                Spacer()
+                                Text(device.id.prefix(8) + "...")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityLabel("Select \(device.name)")
+                    }
+                }
+            }
+        } header: {
+            Text("Interior Device")
+                .accessibilityAddTraits(.isHeader)
+        } footer: {
+            Text("The BLE device inside the elevator for selecting floors. Find the ID in the Scan tab.")
+        }
+    }
+
+    // MARK: - Floor Profiles Section
+
+    private var floorProfilesSection: some View {
+        Section {
+            ForEach(viewModel.profiles) { profile in
+                CalibrationRowView(
+                    profile: profile,
+                    onTest: { viewModel.testProfile(profile) },
+                    onTap: { profileToEdit = profile }
+                )
+            }
+            .onDelete { indexSet in
+                if let index = indexSet.first {
+                    profileToDelete = viewModel.profiles[index]
+                    showDeleteConfirmation = true
+                }
+            }
+            .onMove { source, destination in
+                viewModel.reorderProfiles(from: source, to: destination)
+            }
+        } header: {
+            Text("Floor Profiles")
+                .accessibilityAddTraits(.isHeader)
+        } footer: {
+            Text("Each floor button sends its X, Y, Z coordinates to the interior device.")
+        }
     }
 }
 

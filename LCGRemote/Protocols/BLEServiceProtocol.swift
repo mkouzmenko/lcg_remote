@@ -57,6 +57,28 @@ protocol BLEServiceProtocol: ObservableObject {
     /// The stored call button profile (X, Y, Z) for the exterior unit.
     var callButtonProfile: FloorProfile? { get set }
 
+    // MARK: - Unified Button Command
+
+    /// Sends a command for a ButtonConfig: connects to the appropriate device type and sends X/Y/Z.
+    /// - Parameter buttonConfig: The button configuration with device type and coordinates.
+    func sendCommand(buttonConfig: ButtonConfig)
+
+    // MARK: - Auto-Connect Commands
+
+    /// Connects to a device by ID (scanning if needed) and sends a floor command.
+    /// Handles: scan if needed → connect → write → update status.
+    /// - Parameters:
+    ///   - deviceID: The stored device identifier to connect to.
+    ///   - profile: The floor profile containing X, Y, Z coordinates.
+    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile)
+
+    /// Connects to a device by ID (scanning if needed) and sends a call elevator command.
+    /// Handles: scan if needed → connect → write → update status.
+    /// - Parameters:
+    ///   - deviceID: The stored device identifier to connect to.
+    ///   - profile: The floor profile containing X, Y, Z coordinates for the call button.
+    func connectAndExecuteCall(deviceID: String, profile: FloorProfile)
+
     // MARK: - Preset Execution
 
     /// Executes a multi-step preset sequence: connect exterior → call → connect interior → select floor.

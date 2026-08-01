@@ -1,16 +1,15 @@
 import Foundation
 import Combine
 
-/// ViewModel managing the Device Control screen.
-/// Displays floor buttons for interior units or a call button for exterior units,
-/// tracks device status transitions, and provides haptic feedback.
+/// ViewModel managing the unified Control screen.
+/// Shows all buttons (call + floors) on one screen. Each button auto-connects
+/// to its configured BLE device and sends X/Y/Z coordinates.
 @MainActor
 final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var connectedDevice: BLEDevice?
-    @Published var floorProfiles: [FloorProfile] = []
+    @Published var buttonConfigs: [ButtonConfig] = []
     @Published var deviceStatus: BLEDeviceStatus = .idle
     @Published var statusMessage: String = ""
 
@@ -18,25 +17,40 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
 
     private let bleService: Service
     private let hapticsService: HapticsService
+    private let persistenceService: JSONPersistenceService
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Command Tracking
 
-    private enum LastCommand {
-        case selectFloor(FloorProfile)
-        case callElevator
-    }
+    private var lastButtonConfig: ButtonConfig?
 
-    private var lastCommand: LastCommand?
+    // MARK: - Computed
+
+    var connectedDevice: BLEDevice? {
+        bleService.connectedDevice
+    }
 
     // MARK: - Initialization
 
+    init(bleService: Service, hapticsService: HapticsService, persistenceService: JSONPersistenceService) {
+        self.bleService = bleService
+        self.hapticsService = hapticsService
+        self.persistenceService = persistenceService
+
+        loadButtonConfigs()
+        self.deviceStatus = bleService.deviceStatus
+        self.statusMessage = bleService.statusMessage
+
+        setupBindings()
+    }
+
+    /// Convenience init without persistenceService for backward compatibility.
     init(bleService: Service, hapticsService: HapticsService) {
         self.bleService = bleService
         self.hapticsService = hapticsService
+        self.persistenceService = JSONPersistenceService()
 
-        // Set initial values from service
-        self.connectedDevice = bleService.connectedDevice
+        loadButtonConfigs()
         self.deviceStatus = bleService.deviceStatus
         self.statusMessage = bleService.statusMessage
 
@@ -45,44 +59,67 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
 
     // MARK: - Public API
 
-    /// Selects a floor by executing the corresponding BLE command.
-    /// Triggers a button tap haptic immediately and tracks the command for retry.
-    func selectFloor(_ profile: FloorProfile) {
+    /// Taps a button — auto-connects to the configured device and sends X/Y/Z.
+    func tapButton(_ config: ButtonConfig) {
         guard deviceStatus == .idle else { return }
-        lastCommand = .selectFloor(profile)
+
+        lastButtonConfig = config
         hapticsService.buttonTap()
-        bleService.executeFloorCommand(profile: profile)
+        bleService.sendCommand(buttonConfig: config)
     }
 
-    /// Calls the elevator for exterior units.
-    /// Triggers a button tap haptic immediately and tracks the command for retry.
-    func callElevator() {
-        guard deviceStatus == .idle else { return }
-        lastCommand = .callElevator
-        hapticsService.buttonTap()
-        bleService.executeCallCommand()
+    /// Re-executes the last failed command.
+    func retryLastCommand() {
+        guard let config = lastButtonConfig else { return }
+        tapButton(config)
     }
 
-    /// Disconnects from the currently connected device.
+    /// Disconnects from the current device.
     func disconnect() {
         bleService.disconnect()
     }
 
-    /// Re-executes the last failed command.
-    /// Only meaningful when the device is in error or idle state after an error.
-    func retryLastCommand() {
-        guard let command = lastCommand else { return }
-        switch command {
-        case .selectFloor(let profile):
-            hapticsService.buttonTap()
-            bleService.executeFloorCommand(profile: profile)
-        case .callElevator:
-            hapticsService.buttonTap()
-            bleService.executeCallCommand()
+    /// Reloads button configs (called when returning from settings/calibration).
+    func reloadButtonConfigs() {
+        loadButtonConfigs()
+    }
+
+    /// Triggers a BLE scan to discover nearby devices.
+    func startScan() {
+        bleService.startScan()
+    }
+
+    /// Legacy support: select floor via FloorProfile.
+    func selectFloor(_ profile: FloorProfile) {
+        let config = ButtonConfig(
+            id: profile.id,
+            label: profile.label,
+            deviceType: .interior,
+            x: profile.x,
+            y: profile.y,
+            z: profile.z,
+            sortOrder: profile.sortOrder
+        )
+        tapButton(config)
+    }
+
+    /// Legacy support: call elevator.
+    func callElevator() {
+        if let callConfig = buttonConfigs.first(where: { $0.deviceType == .exterior }) {
+            tapButton(callConfig)
         }
     }
 
     // MARK: - Private
+
+    private func loadButtonConfigs() {
+        let persisted = persistenceService.loadButtonConfigs()
+        if persisted.isEmpty {
+            buttonConfigs = SeedData.defaultButtonConfigs
+        } else {
+            buttonConfigs = persisted.sorted(by: { $0.sortOrder < $1.sortOrder })
+        }
+    }
 
     private func setupBindings() {
         bleService.objectWillChange
@@ -90,13 +127,10 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 DispatchQueue.main.async {
-                    self.connectedDevice = self.bleService.connectedDevice
-
                     let previousStatus = self.deviceStatus
                     let newStatus = self.bleService.deviceStatus
                     self.deviceStatus = newStatus
 
-                    // Trigger haptics based on status transitions
                     if previousStatus == .busy && newStatus == .done {
                         self.hapticsService.commandSuccess()
                     } else if previousStatus == .busy && newStatus == .error {

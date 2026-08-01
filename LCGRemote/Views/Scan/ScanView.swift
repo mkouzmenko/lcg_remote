@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Displays discovered BLE devices and manages scanning lifecycle.
-/// Shows a scanning animation during the 1.5s delay, then lists devices
-/// with name, unit type icon, and signal strength indicator.
+/// Displays discovered BLE devices for identification purposes.
+/// Shows device name, type, signal strength, and full device ID
+/// so users can configure them in Settings/Calibration.
 struct ScanView: View {
     @StateObject private var viewModel: ScanViewModel<BLEService>
     @EnvironmentObject var bleService: BLEService
@@ -27,19 +27,6 @@ struct ScanView: View {
                 scanToolbarButton
             }
         }
-        .alert(
-            "Connection Error",
-            isPresented: showConnectionError,
-            actions: {
-                Button("Retry") {
-                    viewModel.startScan()
-                }
-                Button("OK", role: .cancel) {}
-            },
-            message: {
-                Text(viewModel.connectionError ?? "An error occurred.")
-            }
-        )
         .onAppear {
             viewModel.startScan()
         }
@@ -73,9 +60,11 @@ struct ScanView: View {
                 .accessibilityHidden(true)
             Text("No devices found")
                 .font(.headline)
-            Text("Pull down to scan again")
+            Text("Make sure your LCG devices are powered on and nearby.\nPull down or tap Scan to try again.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -85,19 +74,13 @@ struct ScanView: View {
 
     private var deviceList: some View {
         List(viewModel.devices) { device in
-            Button {
-                viewModel.connect(to: device)
-            } label: {
-                DeviceRow(device: device)
-            }
-            .frame(minHeight: 44)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(accessibilityLabel(for: device))
-            .accessibilityHint("Double-tap to connect to this device")
+            DeviceRow(device: device)
+                .frame(minHeight: 44)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(accessibilityLabel(for: device))
         }
         .refreshable {
             viewModel.refresh()
-            // Allow time for the scan to complete
             try? await Task.sleep(nanoseconds: 1_600_000_000)
         }
     }
@@ -112,7 +95,7 @@ struct ScanView: View {
                 viewModel.startScan()
             }
         } label: {
-            Text(viewModel.isScanning ? "Stop Scan" : "Scan")
+            Text(viewModel.isScanning ? "Stop" : "Scan")
         }
         .accessibilityLabel(viewModel.isScanning ? "Stop Scan" : "Start Scan")
         .accessibilityHint(
@@ -124,17 +107,10 @@ struct ScanView: View {
 
     // MARK: - Helpers
 
-    private var showConnectionError: Binding<Bool> {
-        Binding(
-            get: { viewModel.connectionError != nil },
-            set: { if !$0 { viewModel.connectionError = nil } }
-        )
-    }
-
     private func accessibilityLabel(for device: BLEDevice) -> String {
         let typeLabel = device.unitType == .interior ? "Interior unit" : "Exterior unit"
         let signalLabel = signalDescription(for: device.rssi)
-        return "\(device.name), \(typeLabel), \(signalLabel)"
+        return "\(device.name), \(typeLabel), \(signalLabel), ID: \(device.id)"
     }
 
     private func signalDescription(for rssi: Int) -> String {
@@ -151,7 +127,7 @@ struct ScanView: View {
 
 // MARK: - Device Row
 
-/// A row displaying a single device with icon, name, and signal strength.
+/// A row displaying a discovered device with icon, name, signal, and device ID.
 private struct DeviceRow: View {
     let device: BLEDevice
 
@@ -161,14 +137,37 @@ private struct DeviceRow: View {
                 .frame(width: 32, height: 32)
                 .accessibilityHidden(true)
 
-            Text(device.name)
-                .font(.body)
-                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(device.name)
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    SignalStrengthIndicator(rssi: device.rssi)
+                        .accessibilityHidden(true)
+                }
 
-            Spacer()
+                Text(device.id)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .textSelection(.enabled)
 
-            SignalStrengthIndicator(rssi: device.rssi)
-                .accessibilityHidden(true)
+                HStack(spacing: 4) {
+                    Text(device.unitType == .interior ? "Interior" : "Exterior")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(device.unitType == .interior ? .blue : .orange)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(device.unitType == .interior
+                                    ? Color.blue.opacity(0.1)
+                                    : Color.orange.opacity(0.1))
+                        )
+                }
+            }
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
@@ -177,14 +176,12 @@ private struct DeviceRow: View {
     private var unitTypeIcon: some View {
         Image(systemName: device.unitType == .interior ? "elevator.fill" : "arrow.up.arrow.down")
             .font(.title3)
-            .foregroundStyle(.blue)
+            .foregroundStyle(device.unitType == .interior ? .blue : .orange)
     }
 }
 
 // MARK: - Signal Strength Indicator
 
-/// Displays a wifi-style signal icon based on RSSI value.
-/// Uses wifi SF Symbols with bars to indicate signal strength.
 private struct SignalStrengthIndicator: View {
     let rssi: Int
 

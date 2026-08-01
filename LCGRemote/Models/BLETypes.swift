@@ -19,11 +19,11 @@ enum CommandError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .xExceedsMax:
-            return "X coordinate exceeds maximum value of 144"
+            return "X coordinate exceeds maximum value of 250"
         case .yExceedsMax:
-            return "Y coordinate exceeds maximum value of 208"
+            return "Y coordinate exceeds maximum value of 250"
         case .zExceedsMax:
-            return "Z coordinate exceeds maximum value of 100"
+            return "Z coordinate exceeds maximum value of 250"
         case .notConnected:
             return "Not connected to a BLE device"
         case .writeFailure(let underlying):

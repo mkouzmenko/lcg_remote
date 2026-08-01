@@ -152,6 +152,112 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         }
     }
 
+    // MARK: - Unified Button Command
+
+    /// Simulates sending a command for a ButtonConfig using device groups.
+    /// In mock mode, simply simulates the command regardless of device group assignment.
+    func sendCommand(buttonConfig: ButtonConfig) {
+        commandCount += 1
+        let shouldError = (commandCount % 7 == 0)
+
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
+            guard let self = self else { return }
+
+            // Simulate finding device from device groups
+            let device = SeedData.devices.first(where: { $0.unitType == buttonConfig.deviceType })
+                ?? BLEDevice(
+                    id: buttonConfig.deviceType == .exterior ? "exterior-main" : "interior-lobby",
+                    name: buttonConfig.deviceType == .exterior ? "LiftGateEx-Device" : "LiftGateIn-Device",
+                    unitType: buttonConfig.deviceType,
+                    rssi: -50,
+                    isReachable: true
+                )
+            self.connectedDevice = device
+            self.connectionState = .connected
+            self.statusMessage = "Sending command..."
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+
+                if shouldError {
+                    self.deviceStatus = .error
+                    self.statusMessage = "Command failed. Please retry."
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                        self?.deviceStatus = .idle
+                        self?.statusMessage = ""
+                    }
+                } else {
+                    self.deviceStatus = .done
+                    self.statusMessage = buttonConfig.deviceType == .exterior ? "Elevator called" : "Floor selected"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                        self?.deviceStatus = .idle
+                        self?.statusMessage = ""
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Auto-Connect Commands
+
+    /// Simulates connecting to a device by ID and executing a floor command.
+    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
+            guard let self = self else { return }
+            // Simulate finding device from scan
+            let device = SeedData.devices.first(where: { $0.id == deviceID })
+                ?? BLEDevice(id: deviceID, name: "LiftGateIn-Device", unitType: .interior, rssi: -50, isReachable: true)
+            self.connectedDevice = device
+            self.connectionState = .connected
+            self.statusMessage = "Pressing button..."
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + self.commandDuration) { [weak self] in
+                guard let self = self else { return }
+                self.deviceStatus = .done
+                self.statusMessage = "Floor selected"
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    guard let self = self else { return }
+                    self.deviceStatus = .idle
+                    self.statusMessage = ""
+                }
+            }
+        }
+    }
+
+    /// Simulates connecting to a device by ID and executing a call elevator command.
+    func connectAndExecuteCall(deviceID: String, profile: FloorProfile) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
+            guard let self = self else { return }
+            let device = SeedData.devices.first(where: { $0.id == deviceID })
+                ?? BLEDevice(id: deviceID, name: "LiftGateEx-Device", unitType: .exterior, rssi: -50, isReachable: true)
+            self.connectedDevice = device
+            self.connectionState = .connected
+            self.statusMessage = "Calling elevator..."
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self = self else { return }
+                self.deviceStatus = .done
+                self.statusMessage = "Elevator called"
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    guard let self = self else { return }
+                    self.deviceStatus = .idle
+                    self.statusMessage = ""
+                }
+            }
+        }
+    }
+
     // MARK: - Preset Execution
 
     /// Executes a multi-step preset sequence with timed phases:

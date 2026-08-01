@@ -3,25 +3,26 @@ import Foundation
 /// Encodes user-level commands into BLE byte sequences for LCG hardware units.
 struct CommandEncoder {
 
-    // MARK: - Interior Unit Commands
+    // MARK: - Coordinate Commands
 
-    /// Encodes floor selection coordinates as sequential byte values for the Interior Unit.
+    /// Encodes X, Y, Z coordinates as sequential raw byte values.
+    /// The firmware collects 3 sequential byte writes, then on the 3rd byte triggers position(X, Y, Z).
     ///
-    /// Each coordinate is offset by 0x01 to avoid sending a zero byte (reserved).
     /// - Parameters:
-    ///   - x: Horizontal motor duration (0–144)
-    ///   - y: Vertical motor duration (0–208)
-    ///   - z: Push motor duration (0–100)
-    /// - Returns: Array of 3 `Data` values: [0x01+x], [0x01+y], [0x01+z]
+    ///   - x: X coordinate (0–250)
+    ///   - y: Y coordinate (0–250)
+    ///   - z: Z coordinate (0–250)
+    /// - Returns: Array of 3 `Data` values: [x], [y], [z] as raw bytes
     /// - Throws: `CommandError.xExceedsMax`, `.yExceedsMax`, or `.zExceedsMax` if any value is out of range
     static func encodeFloorCommand(x: UInt8, y: UInt8, z: UInt8) throws -> [Data] {
-        guard x <= 144 else { throw CommandError.xExceedsMax }
-        guard y <= 208 else { throw CommandError.yExceedsMax }
-        guard z <= 100 else { throw CommandError.zExceedsMax }
+        guard x <= 250 else { throw CommandError.xExceedsMax }
+        guard y <= 250 else { throw CommandError.yExceedsMax }
+        guard z <= 250 else { throw CommandError.zExceedsMax }
+        // Send raw byte values — no offset. Firmware expects raw X, Y, Z.
         return [
-            Data([0x01 + x]),
-            Data([0x01 + y]),
-            Data([0x01 + z])
+            Data([x]),
+            Data([y]),
+            Data([z])
         ]
     }
 

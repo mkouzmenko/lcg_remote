@@ -3,16 +3,15 @@ import SwiftUI
 import UIKit
 #endif
 
-/// Device Control View displaying floor buttons for interior units
-/// or a single call button for exterior units, with status indicators
-/// and full VoiceOver accessibility support.
+/// Unified Control View displaying all buttons (call elevator + floor buttons) on one screen.
+/// Each button auto-connects to its configured BLE device and sends X/Y/Z coordinates.
 struct DeviceControlView: View {
     @ObservedObject var viewModel: DeviceControlViewModel<BLEService>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [
-        GridItem(.flexible(), spacing: 8),
-        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
     ]
 
     var body: some View {
@@ -21,22 +20,14 @@ struct DeviceControlView: View {
 
             Spacer()
 
-            if let device = viewModel.connectedDevice {
-                if device.unitType == .exterior {
-                    exteriorCallButton
-                } else {
-                    interiorFloorGrid
-                }
-            }
+            buttonGrid
 
             Spacer()
         }
         .padding()
         .navigationTitle("Control")
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                connectedDeviceIndicator
-            }
+        .onAppear {
+            viewModel.startScan()
         }
         .onChange(of: viewModel.deviceStatus) { newStatus in
             announceStatusChange(newStatus)
@@ -72,7 +63,6 @@ struct DeviceControlView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 36))
                     .foregroundStyle(.green)
-                    .scaleEffect(reduceMotion ? 1.0 : 1.0)
                     .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.5), value: viewModel.deviceStatus)
                 Text(viewModel.statusMessage)
                     .font(.subheadline)
@@ -101,89 +91,64 @@ struct DeviceControlView: View {
         }
     }
 
-    // MARK: - Interior Floor Grid
+    // MARK: - Button Grid
 
-    private var interiorFloorGrid: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(SeedData.defaultButtonMap.profiles.sorted(by: { $0.sortOrder < $1.sortOrder })) { profile in
-                Button {
-                    viewModel.selectFloor(profile)
-                } label: {
-                    Text(profile.label)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 60)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.accentColor.opacity(0.15))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.accentColor, lineWidth: 2)
-                        )
-                }
-                .buttonStyle(.plain)
-                .disabled(viewModel.deviceStatus != .idle)
-                .accessibilityLabel("Floor \(profile.label)")
-                .accessibilityHint("Double-tap to select floor \(profile.label)")
-                .accessibilityAddTraits(.isButton)
+    private var buttonGrid: some View {
+        LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(viewModel.buttonConfigs.sorted(by: { $0.sortOrder < $1.sortOrder })) { config in
+                controlButton(for: config)
             }
         }
         .padding(.horizontal)
     }
-
-    // MARK: - Exterior Call Button
-
-    private var exteriorCallButton: some View {
-        Button {
-            viewModel.callElevator()
-        } label: {
-            Text("Call Elevator")
-                .font(.title)
-                .fontWeight(.bold)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 120)
-                .foregroundStyle(.white)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.accentColor)
-                )
-        }
-        .buttonStyle(.plain)
-        .disabled(viewModel.deviceStatus != .idle)
-        .padding(.horizontal)
-        .accessibilityLabel("Call Elevator")
-        .accessibilityHint("Double-tap to call the elevator")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    // MARK: - Connected Device Indicator
 
     @ViewBuilder
-    private var connectedDeviceIndicator: some View {
-        if let device = viewModel.connectedDevice {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(.green)
-                    .frame(width: 8, height: 8)
-                    .accessibilityHidden(true)
-                Text(device.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                Button {
-                    viewModel.disconnect()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Disconnect")
-                .accessibilityHint("Double-tap to disconnect from this device")
+    private func controlButton(for config: ButtonConfig) -> some View {
+        if config.deviceType == .exterior {
+            // Call Elevator button — prominent styling
+            Button {
+                viewModel.tapButton(config)
+            } label: {
+                Text(config.label)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 70)
+                    .foregroundStyle(.white)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.orange)
+                    )
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(device.name), connected. Tap X to disconnect.")
+            .buttonStyle(.plain)
+            .disabled(viewModel.deviceStatus != .idle)
+            .accessibilityLabel(config.label)
+            .accessibilityHint("Double-tap to \(config.label.lowercased())")
+            .accessibilityAddTraits(.isButton)
+        } else {
+            // Floor button — standard styling
+            Button {
+                viewModel.tapButton(config)
+            } label: {
+                Text(config.label)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 60)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.accentColor.opacity(0.15))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.accentColor, lineWidth: 2)
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.deviceStatus != .idle)
+            .accessibilityLabel("Floor \(config.label)")
+            .accessibilityHint("Double-tap to select floor \(config.label)")
+            .accessibilityAddTraits(.isButton)
         }
     }
 

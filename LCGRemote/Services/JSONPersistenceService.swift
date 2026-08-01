@@ -6,8 +6,10 @@ import SwiftUI
 final class JSONPersistenceService: ObservableObject {
     // File names in Documents directory
     private let buttonMapsFile = "button_maps.json"
+    private let buttonConfigsFile = "button_configs.json"
     private let presetsFile = "presets.json"
     private let deviceNamesFile = "device_names.json"
+    private let deviceGroupsFile = "device_groups.json"
 
     /// The Documents directory URL for this app.
     private var documentsDirectory: URL {
@@ -31,6 +33,29 @@ final class JSONPersistenceService: ObservableObject {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder
+    }
+
+    // MARK: - Button Configs
+
+    /// Saves an array of ButtonConfigs to button_configs.json.
+    func saveButtonConfigs(_ configs: [ButtonConfig]) throws {
+        let data = try encoder().encode(configs)
+        try data.write(to: fileURL(for: buttonConfigsFile), options: .atomic)
+    }
+
+    /// Loads ButtonConfigs from button_configs.json.
+    /// Returns an empty array if the file does not exist or cannot be decoded.
+    func loadButtonConfigs() -> [ButtonConfig] {
+        let url = fileURL(for: buttonConfigsFile)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return []
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            return try decoder().decode([ButtonConfig].self, from: data)
+        } catch {
+            return []
+        }
     }
 
     // MARK: - Button Maps
@@ -102,12 +127,35 @@ final class JSONPersistenceService: ObservableObject {
         }
     }
 
+    // MARK: - Device Groups
+
+    /// Saves a DeviceGroupConfig to device_groups.json.
+    func saveDeviceGroups(_ config: DeviceGroupConfig) throws {
+        let data = try encoder().encode(config)
+        try data.write(to: fileURL(for: deviceGroupsFile), options: .atomic)
+    }
+
+    /// Loads DeviceGroupConfig from device_groups.json.
+    /// Returns a default empty config if the file does not exist or cannot be decoded.
+    func loadDeviceGroups() -> DeviceGroupConfig {
+        let url = fileURL(for: deviceGroupsFile)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return DeviceGroupConfig()
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            return try decoder().decode(DeviceGroupConfig.self, from: data)
+        } catch {
+            return DeviceGroupConfig()
+        }
+    }
+
     // MARK: - Reset
 
     /// Deletes all persisted JSON files, restoring the app to a clean state.
     func resetAllData() throws {
         let fileManager = FileManager.default
-        let files = [buttonMapsFile, presetsFile, deviceNamesFile]
+        let files = [buttonMapsFile, buttonConfigsFile, presetsFile, deviceNamesFile, deviceGroupsFile]
         for fileName in files {
             let url = fileURL(for: fileName)
             if fileManager.fileExists(atPath: url.path) {

@@ -361,6 +361,121 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         }
     }
 
+    // MARK: - Unified Button Command
+
+    func sendCommand(buttonConfig: ButtonConfig) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        Task {
+            // Load device groups config to determine which device to use
+            let persistenceService = JSONPersistenceService()
+            let deviceGroups = persistenceService.loadDeviceGroups()
+
+            let targetDeviceID: String?
+            switch buttonConfig.deviceType {
+            case .interior:
+                targetDeviceID = deviceGroups.interiorDeviceID
+            case .exterior:
+                targetDeviceID = deviceGroups.exteriorDeviceID
+            }
+
+            // If a specific device ID is configured in the group, try to find it
+            let targetDevice: DiscoveredDevice?
+            if let deviceID = targetDeviceID {
+                // Look up the specific device from discovered devices
+                targetDevice = discoveredDeviceLookup[deviceID]
+            } else {
+                // Fallback: find the first device matching the type
+                targetDevice = discoveredDeviceLookup.values.first { discovered in
+                    let bleDevice = BLEDevice(from: discovered)
+                    return bleDevice.unitType == buttonConfig.deviceType
+                }
+            }
+
+            if targetDevice == nil {
+                // Try scanning for the device
+                bleManager.startScan()
+                for _ in 0..<16 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    let found: DiscoveredDevice?
+                    if let deviceID = targetDeviceID {
+                        found = discoveredDeviceLookup[deviceID]
+                    } else {
+                        found = discoveredDeviceLookup.values.first { discovered in
+                            let bleDevice = BLEDevice(from: discovered)
+                            return bleDevice.unitType == buttonConfig.deviceType
+                        }
+                    }
+                    if found != nil { break }
+                }
+                bleManager.stopScan()
+            }
+
+            // Re-check after scan
+            let device: DiscoveredDevice?
+            if let deviceID = targetDeviceID {
+                device = discoveredDeviceLookup[deviceID]
+            } else {
+                device = discoveredDeviceLookup.values.first { discovered in
+                    let bleDevice = BLEDevice(from: discovered)
+                    return bleDevice.unitType == buttonConfig.deviceType
+                }
+            }
+
+            guard let discoveredDevice = device else {
+                self.deviceStatus = .error
+                self.statusMessage = "Device not found. Check Device Groups in Settings."
+                self.scheduleAutoReset()
+                return
+            }
+
+            // Connect (always reconnect to ensure we're talking to the right device)
+            do {
+                // Disconnect any existing connection first
+                if let interior = bleManager.connectedInterior, buttonConfig.deviceType == .interior {
+                    bleManager.disconnect(from: interior)
+                }
+                if let exterior = bleManager.connectedExterior, buttonConfig.deviceType == .exterior {
+                    bleManager.disconnect(from: exterior)
+                }
+
+                try await bleManager.connect(to: discoveredDevice)
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Connection failed."
+                self.scheduleAutoReset()
+                return
+            }
+
+            self.connectionState = .connected
+            self.statusMessage = "Sending command..."
+
+            // Use the peripheral we connected to directly (avoids classification issues)
+            let peripheral = discoveredDevice.peripheral
+
+            // Send X, Y, Z as 3 sequential byte writes (raw values)
+            do {
+                let chunks = try CommandEncoder.encodeFloorCommand(
+                    x: UInt8(buttonConfig.x),
+                    y: UInt8(buttonConfig.y),
+                    z: UInt8(buttonConfig.z)
+                )
+                for chunk in chunks {
+                    try await bleManager.write(data: chunk, to: peripheral)
+                }
+                self.deviceStatus = .done
+                self.statusMessage = buttonConfig.deviceType == .exterior ? "Elevator called" : "Floor selected"
+                self.scheduleAutoReset()
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                self.scheduleAutoReset()
+            }
+        }
+    }
+
     // MARK: - Status Notification Handling
 
     /// Processes a status notification from the connected device.
@@ -435,6 +550,151 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 self.statusMessage = ""
             } catch {
                 // Task was cancelled
+            }
+        }
+    }
+
+    // MARK: - Auto-Connect Commands
+
+    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        Task {
+            // Look up device from last scan or trigger a quick scan
+            var discoveredDevice = discoveredDeviceLookup[deviceID]
+            if discoveredDevice == nil {
+                bleManager.startScan()
+                // Wait up to 8 seconds for the device to appear
+                for _ in 0..<16 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    if let found = discoveredDeviceLookup[deviceID] {
+                        discoveredDevice = found
+                        break
+                    }
+                }
+                bleManager.stopScan()
+            }
+
+            guard let device = discoveredDevice else {
+                self.deviceStatus = .error
+                self.statusMessage = "Device not found. Check Settings."
+                self.scheduleAutoReset()
+                return
+            }
+
+            // Connect
+            do {
+                try await bleManager.connect(to: device)
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Connection failed."
+                self.scheduleAutoReset()
+                return
+            }
+
+            self.connectionState = .connected
+
+            // Determine the peripheral to write to
+            let peripheral: CBPeripheral
+            if let interior = bleManager.connectedInterior, interior.id == device.id {
+                peripheral = interior.peripheral
+            } else if let exterior = bleManager.connectedExterior, exterior.id == device.id {
+                peripheral = exterior.peripheral
+            } else {
+                peripheral = device.peripheral
+            }
+
+            // Send floor command
+            self.statusMessage = "Pressing button..."
+            do {
+                let chunks = try CommandEncoder.encodeFloorCommand(
+                    x: UInt8(profile.x),
+                    y: UInt8(profile.y),
+                    z: UInt8(profile.z)
+                )
+                for chunk in chunks {
+                    try await bleManager.write(data: chunk, to: peripheral)
+                }
+                self.deviceStatus = .done
+                self.statusMessage = "Floor selected"
+                self.scheduleAutoReset()
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                self.scheduleAutoReset()
+            }
+        }
+    }
+
+    func connectAndExecuteCall(deviceID: String, profile: FloorProfile) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        Task {
+            // Look up device from last scan or trigger a quick scan
+            var discoveredDevice = discoveredDeviceLookup[deviceID]
+            if discoveredDevice == nil {
+                bleManager.startScan()
+                for _ in 0..<16 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    if let found = discoveredDeviceLookup[deviceID] {
+                        discoveredDevice = found
+                        break
+                    }
+                }
+                bleManager.stopScan()
+            }
+
+            guard let device = discoveredDevice else {
+                self.deviceStatus = .error
+                self.statusMessage = "Device not found. Check Settings."
+                self.scheduleAutoReset()
+                return
+            }
+
+            // Connect
+            do {
+                try await bleManager.connect(to: device)
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Connection failed."
+                self.scheduleAutoReset()
+                return
+            }
+
+            self.connectionState = .connected
+
+            // Determine the peripheral to write to
+            let peripheral: CBPeripheral
+            if let exterior = bleManager.connectedExterior, exterior.id == device.id {
+                peripheral = exterior.peripheral
+            } else if let interior = bleManager.connectedInterior, interior.id == device.id {
+                peripheral = interior.peripheral
+            } else {
+                peripheral = device.peripheral
+            }
+
+            // Send call command using profile coordinates
+            self.statusMessage = "Calling elevator..."
+            do {
+                let chunks = try CommandEncoder.encodeFloorCommand(
+                    x: UInt8(profile.x),
+                    y: UInt8(profile.y),
+                    z: UInt8(profile.z)
+                )
+                for chunk in chunks {
+                    try await bleManager.write(data: chunk, to: peripheral)
+                }
+                self.deviceStatus = .done
+                self.statusMessage = "Elevator called"
+                self.scheduleAutoReset()
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                self.scheduleAutoReset()
             }
         }
     }

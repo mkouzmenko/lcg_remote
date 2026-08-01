@@ -1,8 +1,6 @@
 import SwiftUI
 
-/// Settings View displaying device management, diagnostics, about info, and reset options.
-/// Presented as a Form with sections: Devices, Diagnostics, About, Reset.
-/// Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8.1, 8.3, 8.6, 9.1
+/// Settings View with device pairing, calibration, diagnostics, about info, and reset options.
 struct SettingsView: View {
     @EnvironmentObject var persistenceService: JSONPersistenceService
     @EnvironmentObject var bleService: BLEService
@@ -17,9 +15,14 @@ struct SettingsView: View {
     @State private var editingDeviceID: String?
     @State private var editedName: String = ""
 
+    // MARK: - Device Groups State
+
+    @State private var deviceGroupConfig = DeviceGroupConfig()
+    @State private var selectedInteriorDeviceID: String? = nil
+    @State private var selectedExteriorDeviceID: String? = nil
+
     // MARK: - Init
 
-    /// Creates the SettingsView, injecting the shared services into the ViewModel.
     init(persistenceService: JSONPersistenceService, bleService: BLEService) {
         _viewModel = StateObject(wrappedValue: SettingsViewModel(
             persistenceService: persistenceService,
@@ -31,12 +34,17 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            deviceGroupsSection
+            calibrationSection
             devicesSection
             diagnosticsSection
             aboutSection
             resetSection
         }
         .navigationTitle("Settings")
+        .onAppear {
+            bleService.startScan()
+        }
         .alert("Forget Device", isPresented: Binding<Bool>(
             get: { deviceToForget != nil },
             set: { if !$0 { deviceToForget = nil } }
@@ -73,7 +81,136 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Devices Section (Requirements 7.1, 7.2, 7.7)
+    // MARK: - Device Groups Section
+
+    private var deviceGroupsSection: some View {
+        Section {
+            // Interior Device Row
+            HStack {
+                Label("Interior", systemImage: "arrow.up.arrow.down")
+                    .foregroundStyle(.blue)
+                Spacer()
+                Picker("", selection: $selectedInteriorDeviceID) {
+                    Text("Not Set").tag(String?.none)
+                    ForEach(interiorDevices) { device in
+                        Text(device.name).tag(Optional(device.id))
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: selectedInteriorDeviceID) { newValue in
+                    saveDeviceGroupSelection(interiorID: newValue, exteriorID: selectedExteriorDeviceID)
+                }
+            }
+            .accessibilityLabel("Interior device group")
+
+            // Exterior Device Row
+            HStack {
+                Label("Exterior", systemImage: "bell.fill")
+                    .foregroundStyle(.orange)
+                Spacer()
+                Picker("", selection: $selectedExteriorDeviceID) {
+                    Text("Not Set").tag(String?.none)
+                    ForEach(exteriorDevices) { device in
+                        Text(device.name).tag(Optional(device.id))
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: selectedExteriorDeviceID) { newValue in
+                    saveDeviceGroupSelection(interiorID: selectedInteriorDeviceID, exteriorID: newValue)
+                }
+            }
+            .accessibilityLabel("Exterior device group")
+
+            // Scan button
+            Button {
+                bleService.startScan()
+            } label: {
+                HStack {
+                    Label("Scan for Devices", systemImage: "antenna.radiowaves.left.and.right")
+                    Spacer()
+                    if bleService.isScanning {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+            }
+            .disabled(bleService.isScanning)
+        } header: {
+            Text("Device Groups")
+        } footer: {
+            Text("Tap Interior/Exterior to associate with a BLE device.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onAppear {
+            loadDeviceGroupConfig()
+            bleService.startScan()
+        }
+    }
+
+    /// Interior devices from the discovered list (names containing "LiftGateIn" or unitType .interior).
+    private var interiorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .interior }
+    }
+
+    /// Exterior devices from the discovered list (names containing "LiftGateEx" or unitType .exterior).
+    private var exteriorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .exterior }
+    }
+
+    private func loadDeviceGroupConfig() {
+        let config = persistenceService.loadDeviceGroups()
+        deviceGroupConfig = config
+        selectedInteriorDeviceID = config.interiorDeviceID
+        selectedExteriorDeviceID = config.exteriorDeviceID
+    }
+
+    private func saveDeviceGroupSelection(interiorID: String?, exteriorID: String?) {
+        let interiorName = bleService.discoveredDevices.first(where: { $0.id == interiorID })?.name
+        let exteriorName = bleService.discoveredDevices.first(where: { $0.id == exteriorID })?.name
+
+        let config = DeviceGroupConfig(
+            interiorDeviceID: interiorID,
+            interiorDeviceName: interiorName ?? deviceGroupConfig.interiorDeviceName,
+            exteriorDeviceID: exteriorID,
+            exteriorDeviceName: exteriorName ?? deviceGroupConfig.exteriorDeviceName
+        )
+        deviceGroupConfig = config
+        try? persistenceService.saveDeviceGroups(config)
+    }
+
+    // MARK: - Calibration Section
+
+    private var calibrationSection: some View {
+        Section {
+            NavigationLink {
+                ButtonConfigurationView(
+                    bleService: bleService,
+                    persistenceService: persistenceService
+                )
+            } label: {
+                HStack {
+                    Image(systemName: "slider.horizontal.3")
+                        .foregroundColor(.accentColor)
+                        .frame(width: 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Button Configuration")
+                            .font(.body)
+                        Text("Edit buttons, device targets, and X/Y/Z positions")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .accessibilityLabel("Button Configuration")
+            .accessibilityHint("Double-tap to configure button positions and device assignments")
+        } header: {
+            Text("Configuration")
+                .accessibilityAddTraits(.isHeader)
+        }
+    }
+
+    // MARK: - Devices Section
 
     private var devicesSection: some View {
         Section {
@@ -94,14 +231,12 @@ struct SettingsView: View {
 
     private func deviceRow(for device: BLEDevice) -> some View {
         HStack(spacing: 12) {
-            // Unit type icon (Requirement 7.1)
             Image(systemName: device.unitType == .interior
                   ? "arrow.up.arrow.down" : "bell.fill")
                 .foregroundColor(.accentColor)
                 .frame(width: 28, height: 28)
                 .accessibilityHidden(true)
 
-            // Name or inline edit field (Requirement 7.2)
             VStack(alignment: .leading, spacing: 2) {
                 if editingDeviceID == device.id {
                     TextField("Device name", text: $editedName, onCommit: {
@@ -123,7 +258,6 @@ struct SettingsView: View {
 
             Spacer()
 
-            // Connection status indicator dot (Requirement 7.1)
             Circle()
                 .fill(statusColor(for: device))
                 .frame(width: 10, height: 10)
@@ -141,7 +275,6 @@ struct SettingsView: View {
                 Label("Forget", systemImage: "trash")
             }
             .accessibilityLabel("Forget device \(device.name)")
-            .accessibilityHint("Double-tap to remove this device with confirmation")
 
             Button {
                 editingDeviceID = device.id
@@ -151,7 +284,6 @@ struct SettingsView: View {
             }
             .tint(.blue)
             .accessibilityLabel("Rename device \(device.name)")
-            .accessibilityHint("Double-tap to edit the device name")
         }
         .contextMenu {
             Button {
@@ -160,20 +292,16 @@ struct SettingsView: View {
             } label: {
                 Label("Rename", systemImage: "pencil")
             }
-            .accessibilityLabel("Rename device")
-            .accessibilityHint("Double-tap to edit the device name")
 
             Button(role: .destructive) {
                 deviceToForget = device
             } label: {
                 Label("Forget Device", systemImage: "trash")
             }
-            .accessibilityLabel("Forget device")
-            .accessibilityHint("Double-tap to remove this device")
         }
     }
 
-    // MARK: - Diagnostics Section (Requirements 7.3, 7.4)
+    // MARK: - Diagnostics Section
 
     private var diagnosticsSection: some View {
         Section {
@@ -221,7 +349,7 @@ struct SettingsView: View {
         .accessibilityLabel("\(entry.deviceName), \(entry.commandType), \(outcomeLabel(entry.outcome)), \(formattedTimestamp(entry.timestamp))")
     }
 
-    // MARK: - About Section (Requirement 7.5)
+    // MARK: - About Section
 
     private var aboutSection: some View {
         Section {
@@ -242,26 +370,13 @@ struct SettingsView: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Build 1")
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("About This Prototype")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("LCG Remote Prototype is a design validation tool for the LCG Remote elevator control app. All device interactions are simulated — no real Bluetooth hardware is required.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.vertical, 4)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("About This Prototype. LCG Remote Prototype is a design validation tool for the LCG Remote elevator control app. All device interactions are simulated, no real Bluetooth hardware is required.")
         } header: {
             Text("About")
                 .accessibilityAddTraits(.isHeader)
         }
     }
 
-    // MARK: - Reset Section (Requirements 7.6, 13.5)
+    // MARK: - Reset Section
 
     private var resetSection: some View {
         Section {
@@ -272,7 +387,6 @@ struct SettingsView: View {
             }
             .accessibilityLabel("Reset Onboarding")
             .accessibilityHint("Double-tap to show the onboarding flow on next launch")
-            .accessibilityAddTraits(.isButton)
 
             Button(role: .destructive) {
                 showResetAllDataAlert = true
@@ -281,7 +395,6 @@ struct SettingsView: View {
             }
             .accessibilityLabel("Reset All Data")
             .accessibilityHint("Double-tap to erase all saved data and restore defaults")
-            .accessibilityAddTraits(.isButton)
         } header: {
             Text("Reset")
                 .accessibilityAddTraits(.isHeader)
@@ -289,7 +402,6 @@ struct SettingsView: View {
             Text("Resetting data cannot be undone.")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .accessibilityLabel("Warning: Resetting data cannot be undone")
         }
     }
 
