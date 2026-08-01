@@ -4,24 +4,25 @@ import Foundation
 /// ViewModel driving the Settings View. Manages the device list with custom names,
 /// diagnostics log display, and reset operations.
 /// Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7
-final class SettingsViewModel: ObservableObject {
+@MainActor
+final class SettingsViewModel<Service: BLEServiceProtocol>: ObservableObject {
     // MARK: - Published Properties
 
-    @Published var devices: [MockDevice] = []
+    @Published var devices: [BLEDevice] = []
     @Published var diagnosticsLog: [DiagnosticsEntry] = []
 
     // MARK: - Dependencies
 
     private let persistenceService: JSONPersistenceService
-    private let bleService: MockBLEService
+    private let bleService: Service
     private var cancellables = Set<AnyCancellable>()
 
     /// UserDefaults key used by OnboardingViewModel to track onboarding completion.
-    private static let onboardingCompletedKey = "hasCompletedOnboarding"
+    private static var onboardingCompletedKey: String { "hasCompletedOnboarding" }
 
     // MARK: - Initializer
 
-    init(persistenceService: JSONPersistenceService, bleService: MockBLEService) {
+    init(persistenceService: JSONPersistenceService, bleService: Service) {
         self.persistenceService = persistenceService
         self.bleService = bleService
 
@@ -34,7 +35,7 @@ final class SettingsViewModel: ObservableObject {
 
     /// Renames a device by persisting a custom name mapping.
     /// The custom name is stored in device_names.json via JSONPersistenceService.
-    func renameDevice(_ device: MockDevice, to name: String) {
+    func renameDevice(_ device: BLEDevice, to name: String) {
         guard let index = devices.firstIndex(where: { $0.id == device.id }) else { return }
         devices[index].name = name
 
@@ -49,7 +50,7 @@ final class SettingsViewModel: ObservableObject {
     }
 
     /// Removes a device from the saved device list.
-    func forgetDevice(_ device: MockDevice) {
+    func forgetDevice(_ device: BLEDevice) {
         devices.removeAll { $0.id == device.id }
 
         // Remove custom name if present
@@ -84,7 +85,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Private Helpers
 
     /// Loads the device list from SeedData, merging any persisted custom names.
-    /// Connection status is derived from MockBLEService state.
+    /// Connection status is derived from the BLE service state.
     private func loadDevices() {
         let customNames = persistenceService.loadDeviceNames()
         devices = SeedData.devices.map { seedDevice in
@@ -101,9 +102,9 @@ final class SettingsViewModel: ObservableObject {
         diagnosticsLog = SeedData.sampleDiagnostics
     }
 
-    /// Observes MockBLEService connection state to reflect device status in the list.
+    /// Observes BLE service connection state to reflect device status in the list.
     private func observeConnectionState() {
-        bleService.$connectedDevice
+        bleService.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
@@ -113,8 +114,8 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Computed Helpers
 
-    /// Returns the connection status label for a given device based on MockBLEService state.
-    func connectionStatus(for device: MockDevice) -> String {
+    /// Returns the connection status label for a given device based on the BLE service state.
+    func connectionStatus(for device: BLEDevice) -> String {
         if bleService.connectedDevice?.id == device.id {
             return "Connected"
         } else if device.isReachable {
@@ -125,7 +126,7 @@ final class SettingsViewModel: ObservableObject {
     }
 
     /// Returns whether a device is currently connected.
-    func isConnected(_ device: MockDevice) -> Bool {
+    func isConnected(_ device: BLEDevice) -> Bool {
         bleService.connectedDevice?.id == device.id
     }
 }

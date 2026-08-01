@@ -2,9 +2,10 @@ import Combine
 import Foundation
 
 /// ViewModel driving the Presets View. Manages location preset CRUD operations,
-/// multi-step preset execution via MockBLEService, and persistence through
+/// multi-step preset execution via BLEService, and persistence through
 /// JSONPersistenceService. Presets are displayed sorted by usage count descending.
-final class PresetsViewModel: ObservableObject {
+@MainActor
+final class PresetsViewModel<Service: BLEServiceProtocol>: ObservableObject {
     // MARK: - Published Properties
 
     @Published var presets: [LocationPreset] = []
@@ -16,13 +17,13 @@ final class PresetsViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let bleService: MockBLEService
+    private let bleService: Service
     private let persistenceService: JSONPersistenceService
     private let hapticsService: HapticsService
 
     // MARK: - Initializer
 
-    init(bleService: MockBLEService, persistenceService: JSONPersistenceService, hapticsService: HapticsService) {
+    init(bleService: Service, persistenceService: JSONPersistenceService, hapticsService: HapticsService) {
         self.bleService = bleService
         self.persistenceService = persistenceService
         self.hapticsService = hapticsService
@@ -32,7 +33,7 @@ final class PresetsViewModel: ObservableObject {
 
     // MARK: - Preset Execution (Requirements 6.2, 6.3, 6.4, 6.7)
 
-    /// Executes a multi-step preset sequence via MockBLEService.
+    /// Executes a multi-step preset sequence via the BLE service.
     /// Updates `currentPhase` and `executionProgress` as each phase completes.
     /// Shows an error alert if a required device is unavailable.
     func executePreset(_ preset: LocationPreset) {
@@ -76,7 +77,8 @@ final class PresetsViewModel: ObservableObject {
                 self.incrementUsageCount(for: preset)
             } else {
                 self.hapticsService.commandError()
-                self.errorMessage = "Preset execution failed."
+                let detail = self.bleService.statusMessage
+                self.errorMessage = detail.isEmpty ? "Preset execution failed." : detail
                 self.showError = true
             }
         })
@@ -111,6 +113,16 @@ final class PresetsViewModel: ObservableObject {
     func editPreset(_ preset: LocationPreset, name: String) {
         guard let index = presets.firstIndex(where: { $0.id == preset.id }) else { return }
         presets[index].name = name
+        savePresets()
+    }
+
+    /// Updates an existing preset with new values and persists the change.
+    func updatePreset(_ preset: LocationPreset, name: String, exteriorID: String?, interiorID: String?, floorID: UUID?) {
+        guard let index = presets.firstIndex(where: { $0.id == preset.id }) else { return }
+        presets[index].name = name
+        presets[index].exteriorDeviceID = exteriorID
+        presets[index].interiorDeviceID = interiorID
+        presets[index].targetFloorProfileID = floorID
         savePresets()
     }
 

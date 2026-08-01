@@ -4,18 +4,19 @@ import Combine
 /// ViewModel managing the Device Control screen.
 /// Displays floor buttons for interior units or a call button for exterior units,
 /// tracks device status transitions, and provides haptic feedback.
-final class DeviceControlViewModel: ObservableObject {
+@MainActor
+final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var connectedDevice: MockDevice?
+    @Published var connectedDevice: BLEDevice?
     @Published var floorProfiles: [FloorProfile] = []
-    @Published var deviceStatus: MockBLEService.DeviceStatus = .idle
+    @Published var deviceStatus: BLEDeviceStatus = .idle
     @Published var statusMessage: String = ""
 
     // MARK: - Dependencies
 
-    private let bleService: MockBLEService
+    private let bleService: Service
     private let hapticsService: HapticsService
     private var cancellables = Set<AnyCancellable>()
 
@@ -30,9 +31,14 @@ final class DeviceControlViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(bleService: MockBLEService, hapticsService: HapticsService) {
+    init(bleService: Service, hapticsService: HapticsService) {
         self.bleService = bleService
         self.hapticsService = hapticsService
+
+        // Set initial values from service
+        self.connectedDevice = bleService.connectedDevice
+        self.deviceStatus = bleService.deviceStatus
+        self.statusMessage = bleService.statusMessage
 
         setupBindings()
     }
@@ -57,6 +63,11 @@ final class DeviceControlViewModel: ObservableObject {
         bleService.executeCallCommand()
     }
 
+    /// Disconnects from the currently connected device.
+    func disconnect() {
+        bleService.disconnect()
+    }
+
     /// Re-executes the last failed command.
     /// Only meaningful when the device is in error or idle state after an error.
     func retryLastCommand() {
@@ -74,31 +85,27 @@ final class DeviceControlViewModel: ObservableObject {
     // MARK: - Private
 
     private func setupBindings() {
-        // Observe connected device
-        bleService.$connectedDevice
+        bleService.objectWillChange
             .receive(on: DispatchQueue.main)
-            .assign(to: &$connectedDevice)
-
-        // Observe device status and trigger haptics on transitions
-        bleService.$deviceStatus
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] newStatus in
+            .sink { [weak self] _ in
                 guard let self = self else { return }
-                let previousStatus = self.deviceStatus
-                self.deviceStatus = newStatus
+                DispatchQueue.main.async {
+                    self.connectedDevice = self.bleService.connectedDevice
 
-                // Trigger haptics based on status transitions
-                if previousStatus == .busy && newStatus == .done {
-                    self.hapticsService.commandSuccess()
-                } else if previousStatus == .busy && newStatus == .error {
-                    self.hapticsService.commandError()
+                    let previousStatus = self.deviceStatus
+                    let newStatus = self.bleService.deviceStatus
+                    self.deviceStatus = newStatus
+
+                    // Trigger haptics based on status transitions
+                    if previousStatus == .busy && newStatus == .done {
+                        self.hapticsService.commandSuccess()
+                    } else if previousStatus == .busy && newStatus == .error {
+                        self.hapticsService.commandError()
+                    }
+
+                    self.statusMessage = self.bleService.statusMessage
                 }
             }
             .store(in: &cancellables)
-
-        // Observe status message
-        bleService.$statusMessage
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$statusMessage)
     }
 }

@@ -8,17 +8,6 @@ enum UnitType: String, Codable, Hashable {
     case exterior
 }
 
-// MARK: - MockDevice
-
-/// Represents a simulated LCG BLE device.
-struct MockDevice: Identifiable, Codable, Hashable {
-    let id: String
-    var name: String
-    let unitType: UnitType
-    let rssi: Int
-    var isReachable: Bool = true
-}
-
 // MARK: - FloorProfile
 
 /// A saved configuration mapping a floor button label to its X, Y, Z motor coordinates.

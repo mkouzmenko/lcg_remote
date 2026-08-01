@@ -7,7 +7,7 @@ import UIKit
 /// or a single call button for exterior units, with status indicators
 /// and full VoiceOver accessibility support.
 struct DeviceControlView: View {
-    @ObservedObject var viewModel: DeviceControlViewModel
+    @ObservedObject var viewModel: DeviceControlViewModel<BLEService>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [
@@ -172,15 +172,24 @@ struct DeviceControlView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .lineLimit(1)
+                Button {
+                    viewModel.disconnect()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Disconnect")
+                .accessibilityHint("Double-tap to disconnect from this device")
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(device.name), connected")
+            .accessibilityLabel("\(device.name), connected. Tap X to disconnect.")
         }
     }
 
     // MARK: - Accessibility Announcements
 
-    private func announceStatusChange(_ status: MockBLEService.DeviceStatus) {
+    private func announceStatusChange(_ status: BLEDeviceStatus) {
         let message: String
         switch status {
         case .idle:

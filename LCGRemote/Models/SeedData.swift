@@ -6,16 +6,16 @@ import Foundation
 enum SeedData {
     // MARK: - Mock Devices (Requirement 2.2)
 
-    static let devices: [MockDevice] = [
-        MockDevice(id: "interior-lobby", name: "LiftGateIn-Lobby", unitType: .interior, rssi: -45),
-        MockDevice(id: "interior-office", name: "LiftGateIn-Office", unitType: .interior, rssi: -62),
-        MockDevice(id: "exterior-main", name: "LiftGateEx-MainEntry", unitType: .exterior, rssi: -38),
+    static let devices: [BLEDevice] = [
+        BLEDevice(id: "interior-lobby", name: "LiftGateIn-Lobby", unitType: .interior, rssi: -45, isReachable: true),
+        BLEDevice(id: "interior-office", name: "LiftGateIn-Office", unitType: .interior, rssi: -62, isReachable: true),
+        BLEDevice(id: "exterior-main", name: "LiftGateEx-MainEntry", unitType: .exterior, rssi: -38, isReachable: true),
     ]
 
     // MARK: - Onboarding Device
 
-    static let onboardingDevice = MockDevice(
-        id: "interior-demo", name: "LiftGateIn-Demo", unitType: .interior, rssi: -40
+    static let onboardingDevice = BLEDevice(
+        id: "interior-demo", name: "LiftGateIn-Demo", unitType: .interior, rssi: -40, isReachable: true
     )
 
     // MARK: - Default Button Map (Requirement 4.1)

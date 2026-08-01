@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// Root navigation view with three tabs: Control, Presets, Settings.
-/// Maintains connection state across tab switches via shared MockBLEService.
+/// Maintains connection state across tab switches via shared BLEService.
 ///
 /// Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 1.5, 1.7, 9.3, 9.6, 13.4
 struct ContentView: View {
-    @EnvironmentObject var mockBLEService: MockBLEService
+    @EnvironmentObject var bleService: BLEService
     @EnvironmentObject var persistenceService: JSONPersistenceService
     @EnvironmentObject var hapticsService: HapticsService
 
@@ -35,16 +35,16 @@ struct ContentView: View {
     private var controlTab: some View {
         NavigationStack {
             Group {
-                if mockBLEService.connectedDevice != nil {
+                if bleService.connectedDevice != nil {
                     DeviceControlView(viewModel: DeviceControlViewModel(
-                        bleService: mockBLEService,
+                        bleService: bleService,
                         hapticsService: hapticsService
                     ))
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
                             NavigationLink {
                                 CalibrationView(
-                                    bleService: mockBLEService,
+                                    bleService: bleService,
                                     persistenceService: persistenceService
                                 )
                             } label: {
@@ -55,7 +55,7 @@ struct ContentView: View {
                         }
                     }
                 } else {
-                    ScanView(bleService: mockBLEService)
+                    ScanView(bleService: bleService)
                 }
             }
         }
@@ -65,7 +65,7 @@ struct ContentView: View {
 
     private var presetsTab: some View {
         PresetsView(
-            bleService: mockBLEService,
+            bleService: bleService,
             persistenceService: persistenceService,
             hapticsService: hapticsService
         )
@@ -76,7 +76,7 @@ struct ContentView: View {
     private var settingsTab: some View {
         SettingsView(
             persistenceService: persistenceService,
-            bleService: mockBLEService
+            bleService: bleService
         )
     }
 }

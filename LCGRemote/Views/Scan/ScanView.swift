@@ -4,10 +4,10 @@ import SwiftUI
 /// Shows a scanning animation during the 1.5s delay, then lists devices
 /// with name, unit type icon, and signal strength indicator.
 struct ScanView: View {
-    @StateObject private var viewModel: ScanViewModel
-    @EnvironmentObject var mockBLEService: MockBLEService
+    @StateObject private var viewModel: ScanViewModel<BLEService>
+    @EnvironmentObject var bleService: BLEService
 
-    init(bleService: MockBLEService) {
+    init(bleService: BLEService) {
         _viewModel = StateObject(wrappedValue: ScanViewModel(bleService: bleService))
     }
 
@@ -131,7 +131,7 @@ struct ScanView: View {
         )
     }
 
-    private func accessibilityLabel(for device: MockDevice) -> String {
+    private func accessibilityLabel(for device: BLEDevice) -> String {
         let typeLabel = device.unitType == .interior ? "Interior unit" : "Exterior unit"
         let signalLabel = signalDescription(for: device.rssi)
         return "\(device.name), \(typeLabel), \(signalLabel)"
@@ -153,7 +153,7 @@ struct ScanView: View {
 
 /// A row displaying a single device with icon, name, and signal strength.
 private struct DeviceRow: View {
-    let device: MockDevice
+    let device: BLEDevice
 
     var body: some View {
         HStack(spacing: 12) {

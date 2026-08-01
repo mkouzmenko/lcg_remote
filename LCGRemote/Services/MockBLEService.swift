@@ -3,30 +3,19 @@ import SwiftUI
 
 /// Mock Bluetooth Low Energy service replacing all real BLE communication.
 /// Uses timer-driven state transitions to simulate realistic device interactions.
-final class MockBLEService: ObservableObject {
-    // MARK: - State Enums
-
-    enum ConnectionState: String {
-        case disconnected
-        case connecting
-        case connected
-    }
-
-    enum DeviceStatus: String, CaseIterable {
-        case idle
-        case busy
-        case done
-        case error
-    }
-
+@MainActor
+final class MockBLEService: ObservableObject, BLEServiceProtocol {
     // MARK: - Published Properties
 
-    @Published var discoveredDevices: [MockDevice] = []
+    @Published var discoveredDevices: [BLEDevice] = []
     @Published var isScanning: Bool = false
-    @Published var connectedDevice: MockDevice? = nil
-    @Published var connectionState: ConnectionState = .disconnected
-    @Published var deviceStatus: DeviceStatus = .idle
+    @Published var connectedDevice: BLEDevice? = nil
+    @Published var connectionState: BLEConnectionState = .disconnected
+    @Published var deviceStatus: BLEDeviceStatus = .idle
     @Published var statusMessage: String = ""
+
+    /// Stored call button profile for exterior unit calibration.
+    var callButtonProfile: FloorProfile? = FloorProfile(id: UUID(), label: "Call Elevator", x: 50, y: 100, z: 30, sortOrder: 0)
 
     // MARK: - Configuration
 
@@ -59,7 +48,7 @@ final class MockBLEService: ObservableObject {
 
     /// Simulates connecting to a device. Reachable devices connect after 1.5s;
     /// unreachable devices produce an error after 3s.
-    func connect(to device: MockDevice) {
+    func connect(to device: BLEDevice) {
         connectionState = .connecting
         statusMessage = "Connecting..."
 

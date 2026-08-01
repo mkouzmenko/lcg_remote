@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct LCGRemoteApp: App {
-    @StateObject private var mockBLEService = MockBLEService()
+    @StateObject private var bleService = BLEService()
     @StateObject private var persistenceService = JSONPersistenceService()
     @StateObject private var hapticsService = HapticsService()
 
@@ -12,12 +12,12 @@ struct LCGRemoteApp: App {
         WindowGroup {
             if hasCompletedOnboarding {
                 ContentView()
-                    .environmentObject(mockBLEService)
+                    .environmentObject(bleService)
                     .environmentObject(persistenceService)
                     .environmentObject(hapticsService)
             } else {
-                OnboardingView(bleService: mockBLEService)
-                    .environmentObject(mockBLEService)
+                OnboardingView(bleService: bleService)
+                    .environmentObject(bleService)
                     .environmentObject(persistenceService)
                     .environmentObject(hapticsService)
             }

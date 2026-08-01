@@ -7,7 +7,8 @@ import SwiftUI
 /// Step flow:
 ///   welcome → bluetoothPermission → (allow → scanning 2s → deviceFound → connecting 1s → paired)
 ///                                   or (deny → permissionDenied → try again → bluetoothPermission)
-final class OnboardingViewModel: ObservableObject {
+@MainActor
+final class OnboardingViewModel<Service: BLEServiceProtocol>: ObservableObject {
     // MARK: - Step Enum
 
     enum OnboardingStep {
@@ -27,11 +28,11 @@ final class OnboardingViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let bleService: MockBLEService
+    private let bleService: Service
 
     // MARK: - UserDefaults Key
 
-    private static let hasCompletedOnboardingKey = "hasCompletedOnboarding"
+    private static var hasCompletedOnboardingKey: String { "hasCompletedOnboarding" }
 
     // MARK: - Static Property (Requirement 1.7)
 
@@ -44,7 +45,7 @@ final class OnboardingViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(bleService: MockBLEService) {
+    init(bleService: Service) {
         self.bleService = bleService
     }
 
@@ -82,13 +83,13 @@ final class OnboardingViewModel: ObservableObject {
         currentStep = .bluetoothPermission
     }
 
-    /// Simulates selecting the discovered demo device and connecting with a 1-second delay.
-    /// On success, transitions to the paired state and connects via MockBLEService.
+    /// Selects the discovered demo device and connects with a 1-second delay.
+    /// On success, transitions to the paired state and connects via the BLE service.
     /// (Requirement 1.4)
     func selectDevice() {
         currentStep = .connecting
 
-        // Connect to the onboarding demo device via MockBLEService
+        // Connect to the onboarding demo device via the BLE service
         let device = SeedData.onboardingDevice
         bleService.connect(to: device)
 

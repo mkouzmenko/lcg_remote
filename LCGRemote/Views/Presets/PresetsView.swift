@@ -10,11 +10,12 @@ import UIKit
 ///
 /// Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 8.1, 8.2, 8.5, 9.1
 struct PresetsView: View {
-    @StateObject private var viewModel: PresetsViewModel
+    @StateObject private var viewModel: PresetsViewModel<BLEService>
     @State private var showingCreateSheet = false
+    @State private var presetToEdit: LocationPreset? = nil
     @State private var lastAnnouncedPhase: PresetPhase? = nil
 
-    init(bleService: MockBLEService, persistenceService: JSONPersistenceService, hapticsService: HapticsService) {
+    init(bleService: BLEService, persistenceService: JSONPersistenceService, hapticsService: HapticsService) {
         _viewModel = StateObject(wrappedValue: PresetsViewModel(
             bleService: bleService,
             persistenceService: persistenceService,
@@ -46,6 +47,9 @@ struct PresetsView: View {
             .sheet(isPresented: $showingCreateSheet) {
                 CreatePresetView(viewModel: viewModel)
             }
+            .sheet(item: $presetToEdit) { preset in
+                EditPresetView(viewModel: viewModel, preset: preset)
+            }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -74,12 +78,24 @@ struct PresetsView: View {
                     PresetRow(preset: preset) {
                         viewModel.executePreset(preset)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        presetToEdit = preset
+                    }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             viewModel.deletePreset(preset)
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                    }
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            presetToEdit = preset
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        .tint(.orange)
                     }
                 }
             }
@@ -217,13 +233,11 @@ private struct PresetRow: View {
     /// Returns a human-readable summary of the associated devices.
     private var deviceSummary: String {
         var parts: [String] = []
-        if let extID = preset.exteriorDeviceID,
-           let device = SeedData.devices.first(where: { $0.id == extID }) {
-            parts.append(device.name)
+        if let extID = preset.exteriorDeviceID {
+            parts.append("Ext: \(extID.prefix(8))...")
         }
-        if let intID = preset.interiorDeviceID,
-           let device = SeedData.devices.first(where: { $0.id == intID }) {
-            parts.append(device.name)
+        if let intID = preset.interiorDeviceID {
+            parts.append("Int: \(intID.prefix(8))...")
         }
         return parts.isEmpty ? "No devices" : parts.joined(separator: " → ")
     }
@@ -234,7 +248,8 @@ private struct PresetRow: View {
 /// A form sheet for creating a new Location Preset by selecting
 /// an exterior device, an interior device, and a target floor.
 private struct CreatePresetView: View {
-    @ObservedObject var viewModel: PresetsViewModel
+    @ObservedObject var viewModel: PresetsViewModel<BLEService>
+    @EnvironmentObject var bleService: BLEService
     @Environment(\.dismiss) private var dismiss
 
     @State private var presetName = ""
@@ -242,12 +257,12 @@ private struct CreatePresetView: View {
     @State private var selectedInteriorID: String? = nil
     @State private var selectedFloorID: UUID? = nil
 
-    private var exteriorDevices: [MockDevice] {
-        SeedData.devices.filter { $0.unitType == .exterior }
+    private var exteriorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .exterior }
     }
 
-    private var interiorDevices: [MockDevice] {
-        SeedData.devices.filter { $0.unitType == .interior }
+    private var interiorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .interior }
     }
 
     private var availableFloors: [FloorProfile] {
@@ -319,6 +334,99 @@ private struct CreatePresetView: View {
                     .disabled(presetName.trimmingCharacters(in: .whitespaces).isEmpty)
                     .accessibilityHint("Double-tap to save the new preset")
                 }
+            }
+        }
+    }
+}
+
+
+// MARK: - Edit Preset Sheet
+
+/// A form sheet for editing an existing Location Preset.
+private struct EditPresetView: View {
+    @ObservedObject var viewModel: PresetsViewModel<BLEService>
+    @EnvironmentObject var bleService: BLEService
+    @Environment(\.dismiss) private var dismiss
+    let preset: LocationPreset
+
+    @State private var presetName = ""
+    @State private var selectedExteriorID: String? = nil
+    @State private var selectedInteriorID: String? = nil
+    @State private var selectedFloorID: UUID? = nil
+
+    private var exteriorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .exterior }
+    }
+
+    private var interiorDevices: [BLEDevice] {
+        bleService.discoveredDevices.filter { $0.unitType == .interior }
+    }
+
+    private var availableFloors: [FloorProfile] {
+        SeedData.defaultButtonMap.profiles
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Preset Name") {
+                    TextField("e.g. Go to Office", text: $presetName)
+                }
+
+                Section("Exterior Device") {
+                    Picker("Exterior Unit", selection: $selectedExteriorID) {
+                        Text("None").tag(String?.none)
+                        ForEach(exteriorDevices) { device in
+                            Text(device.name).tag(Optional(device.id))
+                        }
+                    }
+                }
+
+                Section("Interior Device") {
+                    Picker("Interior Unit", selection: $selectedInteriorID) {
+                        Text("None").tag(String?.none)
+                        ForEach(interiorDevices) { device in
+                            Text(device.name).tag(Optional(device.id))
+                        }
+                    }
+                }
+
+                Section("Target Floor") {
+                    Picker("Floor", selection: $selectedFloorID) {
+                        Text("None").tag(UUID?.none)
+                        ForEach(availableFloors) { profile in
+                            Text(profile.label).tag(Optional(profile.id))
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Edit Preset")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        viewModel.updatePreset(
+                            preset,
+                            name: presetName,
+                            exteriorID: selectedExteriorID,
+                            interiorID: selectedInteriorID,
+                            floorID: selectedFloorID
+                        )
+                        dismiss()
+                    }
+                    .disabled(presetName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .onAppear {
+                presetName = preset.name
+                selectedExteriorID = preset.exteriorDeviceID
+                selectedInteriorID = preset.interiorDeviceID
+                selectedFloorID = preset.targetFloorProfileID
             }
         }
     }

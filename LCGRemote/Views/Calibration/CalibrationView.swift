@@ -2,13 +2,15 @@ import SwiftUI
 
 /// Displays and manages floor profile calibration: list, add, edit, delete, reorder, and test.
 struct CalibrationView: View {
-    @StateObject private var viewModel: CalibrationViewModel
+    @StateObject private var viewModel: CalibrationViewModel<BLEService>
+    @EnvironmentObject var bleService: BLEService
     @State private var showingAddForm = false
+    @State private var showingCallButtonForm = false
     @State private var profileToEdit: FloorProfile? = nil
     @State private var profileToDelete: FloorProfile? = nil
     @State private var showDeleteConfirmation = false
 
-    init(bleService: MockBLEService, persistenceService: JSONPersistenceService) {
+    init(bleService: BLEService, persistenceService: JSONPersistenceService) {
         _viewModel = StateObject(wrappedValue: CalibrationViewModel(
             bleService: bleService,
             persistenceService: persistenceService
@@ -17,6 +19,16 @@ struct CalibrationView: View {
 
     var body: some View {
         List {
+            // Show call button calibration for exterior units
+            if let device = bleService.connectedDevice, device.unitType == .exterior {
+                Section {
+                    callButtonCalibrationRow
+                } header: {
+                    Text("Call Button Position")
+                        .accessibilityAddTraits(.isHeader)
+                }
+            }
+
             Section {
                 ForEach(viewModel.profiles) { profile in
                     CalibrationRowView(
@@ -90,6 +102,47 @@ struct CalibrationView: View {
                 Text("Are you sure you want to delete \"\(profile.label)\"? This action cannot be undone.")
             }
         }
+        .sheet(isPresented: $showingCallButtonForm) {
+            NavigationStack {
+                CallButtonCalibrationForm(bleService: bleService)
+            }
+        }
+    }
+
+    // MARK: - Call Button Calibration Row
+
+    private var callButtonCalibrationRow: some View {
+        Button {
+            showingCallButtonForm = true
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Call Elevator")
+                        .font(.headline)
+                    if let profile = bleService.callButtonProfile {
+                        Text("X: \(profile.x)  Y: \(profile.y)  Z: \(profile.z)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Not calibrated")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                Spacer()
+                Button {
+                    bleService.executeCallCommand()
+                } label: {
+                    Text("Test")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Call Elevator calibration")
+        .accessibilityHint("Double-tap to set position coordinates")
     }
 }
 
@@ -138,7 +191,7 @@ private struct CalibrationRowView: View {
 
 /// Form for adding or editing a floor profile with label and X/Y/Z coordinate inputs.
 private struct CalibrationFormView: View {
-    @ObservedObject var viewModel: CalibrationViewModel
+    @ObservedObject var viewModel: CalibrationViewModel<BLEService>
     let mode: FormMode
     @Environment(\.dismiss) private var dismiss
 
@@ -271,5 +324,96 @@ private struct CalibrationFormView: View {
                 dismiss()
             }
         }
+    }
+}
+
+
+// MARK: - Call Button Calibration Form
+
+/// Form for setting X, Y, Z coordinates of the exterior call button.
+private struct CallButtonCalibrationForm: View {
+    @ObservedObject var bleService: BLEService
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var xValue: String = ""
+    @State private var yValue: String = ""
+    @State private var zValue: String = ""
+    @State private var validationError: String? = nil
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("X (0–144)", text: $xValue)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .accessibilityLabel("X coordinate")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Y (0–208)", text: $yValue)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .accessibilityLabel("Y coordinate")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Z (0–100)", text: $zValue)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .accessibilityLabel("Z coordinate")
+                }
+            } header: {
+                Text("Call Button Coordinates")
+            }
+
+            if let error = validationError {
+                Section {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
+            }
+        }
+        .navigationTitle("Call Button Position")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") { save() }
+            }
+        }
+        .onAppear {
+            if let profile = bleService.callButtonProfile {
+                xValue = String(profile.x)
+                yValue = String(profile.y)
+                zValue = String(profile.z)
+            }
+        }
+    }
+
+    private func save() {
+        let x = Int(xValue) ?? -1
+        let y = Int(yValue) ?? -1
+        let z = Int(zValue) ?? -1
+
+        guard x >= 0, x <= 144 else { validationError = "X must be 0–144"; return }
+        guard y >= 0, y <= 208 else { validationError = "Y must be 0–208"; return }
+        guard z >= 0, z <= 100 else { validationError = "Z must be 0–100"; return }
+
+        bleService.callButtonProfile = FloorProfile(
+            id: UUID(),
+            label: "Call Elevator",
+            x: x,
+            y: y,
+            z: z,
+            sortOrder: 0
+        )
+        dismiss()
     }
 }

@@ -2,12 +2,13 @@ import Testing
 import Foundation
 @testable import LCGRemote
 
-@Test func mockDeviceCreation() async throws {
-    let device = MockDevice(
+@Test func bleDeviceCreation() async throws {
+    let device = BLEDevice(
         id: "test-device",
         name: "TestDevice",
         unitType: .interior,
-        rssi: -50
+        rssi: -50,
+        isReachable: true
     )
 
     #expect(device.id == "test-device")

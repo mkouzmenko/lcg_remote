@@ -6,13 +6,13 @@ import SwiftUI
 ///
 /// Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 8.1, 8.3, 8.6, 9.1, 9.5
 struct OnboardingView: View {
-    @EnvironmentObject var mockBLEService: MockBLEService
-    @StateObject private var viewModel: OnboardingViewModel
+    @EnvironmentObject var bleService: BLEService
+    @StateObject private var viewModel: OnboardingViewModel<BLEService>
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Creates the OnboardingView, injecting the shared MockBLEService into the ViewModel.
-    init(bleService: MockBLEService) {
+    /// Creates the OnboardingView, injecting the shared BLEService into the ViewModel.
+    init(bleService: BLEService) {
         _viewModel = StateObject(wrappedValue: OnboardingViewModel(bleService: bleService))
     }
 

@@ -44,6 +44,9 @@ final class BLEManager: NSObject, ObservableObject {
     /// Stores discovered characteristics keyed by peripheral UUID.
     private var peripheralCharacteristics: [UUID: [CBUUID: CBCharacteristic]] = [:]
 
+    /// Caches peripheral names from discovery (peripheral.name can be nil after connection).
+    private var peripheralNames: [UUID: String] = [:]
+
     /// Continuations for pending async connect operations keyed by peripheral UUID.
     private var connectContinuations: [UUID: CheckedContinuation<Void, Error>] = [:]
 
@@ -81,20 +84,18 @@ final class BLEManager: NSObject, ObservableObject {
 
     /// Starts scanning for LCG Interior and Exterior units.
     ///
-    /// Filters on both service UUIDs. Automatically stops after 10 seconds.
+    /// Scans for all nearby BLE devices and filters by name prefix
+    /// ("LiftGateIn" for interior, "LiftGateEx" for exterior).
+    /// Automatically stops after 10 seconds.
     func startScan() {
         guard centralManager.state == .poweredOn else { return }
 
         discoveredDevices.removeAll()
         isScanning = true
 
-        let serviceUUIDs = [
-            BLEConstants.interiorServiceCBUUID,
-            BLEConstants.exteriorServiceCBUUID
-        ]
-
+        // Scan for all devices (no UUID filter) since each unit has a unique service UUID
         centralManager.scanForPeripherals(
-            withServices: serviceUUIDs,
+            withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
         )
 
@@ -223,16 +224,28 @@ final class BLEManager: NSObject, ObservableObject {
 
     // MARK: - Device Classification
 
-    /// Classifies a peripheral as Interior or Exterior based on its advertised service UUIDs.
+    /// Classifies a peripheral as Interior or Exterior based on its name prefix.
     ///
-    /// - Parameter advertisedServiceUUIDs: The service UUIDs from the advertisement data.
-    /// - Returns: The unit type, or `nil` if the device doesn't match either known UUID.
-    static func classifyDevice(advertisedServiceUUIDs: [CBUUID]?) -> UnitType? {
-        guard let serviceUUIDs = advertisedServiceUUIDs else { return nil }
-        if serviceUUIDs.contains(BLEConstants.interiorServiceCBUUID) {
-            return .interior
-        } else if serviceUUIDs.contains(BLEConstants.exteriorServiceCBUUID) {
-            return .exterior
+    /// - Parameters:
+    ///   - name: The peripheral's advertised name.
+    ///   - advertisedServiceUUIDs: The service UUIDs from the advertisement data (fallback).
+    /// - Returns: The unit type, or `nil` if the device doesn't match either known pattern.
+    static func classifyDevice(name: String?, advertisedServiceUUIDs: [CBUUID]?) -> UnitType? {
+        // Primary: classify by name prefix
+        if let name = name {
+            if name.hasPrefix("LiftGateIn") {
+                return .interior
+            } else if name.hasPrefix("LiftGateEx") {
+                return .exterior
+            }
+        }
+        // Fallback: classify by known service UUIDs
+        if let serviceUUIDs = advertisedServiceUUIDs {
+            if serviceUUIDs.contains(BLEConstants.interiorServiceCBUUID) {
+                return .interior
+            } else if serviceUUIDs.contains(BLEConstants.exteriorServiceCBUUID) {
+                return .exterior
+            }
         }
         return nil
     }
@@ -255,18 +268,23 @@ extension BLEManager: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        let name = peripheral.name
+            ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
+
         guard let unitType = BLEManager.classifyDevice(
+            name: name,
             advertisedServiceUUIDs: advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]
         ) else { return }
 
-        let name = peripheral.name
-            ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
-            ?? "Unknown Device"
+        let displayName = name ?? "Unknown Device"
+
+        // Cache the name for use during characteristic discovery
+        peripheralNames[peripheral.identifier] = displayName
 
         let device = DiscoveredDevice(
             id: peripheral.identifier,
             peripheral: peripheral,
-            name: name,
+            name: displayName,
             unitType: unitType,
             rssi: RSSI.intValue,
             lastSeen: Date()
@@ -292,10 +310,7 @@ extension BLEManager: CBCentralManagerDelegate {
 
         // Set delegate and discover services
         peripheral.delegate = self
-        peripheral.discoverServices([
-            BLEConstants.interiorServiceCBUUID,
-            BLEConstants.exteriorServiceCBUUID
-        ])
+        peripheral.discoverServices(nil)
     }
 
     func centralManager(
@@ -414,12 +429,16 @@ extension BLEManager: CBPeripheralDelegate {
             }
         }
 
-        // Determine unit type and update connected device state
+        // Determine unit type by device name (since all units share the same service UUID)
         let unitType: UnitType
-        if service.uuid == BLEConstants.interiorServiceCBUUID {
+        let deviceName = peripheral.name ?? peripheralNames[peripheralID] ?? ""
+        if deviceName.hasPrefix("LiftGateIn") {
             unitType = .interior
-        } else if service.uuid == BLEConstants.exteriorServiceCBUUID {
+        } else if deviceName.hasPrefix("LiftGateEx") {
             unitType = .exterior
+        } else if service.uuid == BLEConstants.interiorServiceCBUUID {
+            // Fallback: classify as interior if we can't determine by name
+            unitType = .interior
         } else {
             return
         }
@@ -428,7 +447,7 @@ extension BLEManager: CBPeripheralDelegate {
             id: peripheralID,
             peripheral: peripheral,
             unitType: unitType,
-            name: peripheral.name ?? "LCG Device"
+            name: deviceName.isEmpty ? "LCG Device" : deviceName
         )
 
         switch unitType {

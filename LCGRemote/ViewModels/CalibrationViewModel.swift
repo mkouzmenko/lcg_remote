@@ -2,8 +2,9 @@ import Foundation
 import SwiftUI
 
 /// ViewModel managing floor profile calibration: add, edit, delete, reorder, test, and validate.
-/// Persists changes via JSONPersistenceService and triggers test commands via MockBLEService.
-final class CalibrationViewModel: ObservableObject {
+/// Persists changes via JSONPersistenceService and triggers test commands via BLEService.
+@MainActor
+final class CalibrationViewModel<Service: BLEServiceProtocol>: ObservableObject {
     // MARK: - Published Properties
 
     @Published var profiles: [FloorProfile] = []
@@ -11,12 +12,12 @@ final class CalibrationViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let bleService: MockBLEService
+    private let bleService: Service
     private let persistenceService: JSONPersistenceService
 
     // MARK: - Initialization
 
-    init(bleService: MockBLEService, persistenceService: JSONPersistenceService) {
+    init(bleService: Service, persistenceService: JSONPersistenceService) {
         self.bleService = bleService
         self.persistenceService = persistenceService
         loadProfiles()
@@ -83,7 +84,7 @@ final class CalibrationViewModel: ObservableObject {
         persist()
     }
 
-    /// Triggers a test command for the given profile via MockBLEService.
+    /// Triggers a test command for the given profile via the BLE service.
     func testProfile(_ profile: FloorProfile) {
         bleService.executeFloorCommand(profile: profile)
     }

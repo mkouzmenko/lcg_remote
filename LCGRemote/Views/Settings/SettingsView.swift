@@ -5,22 +5,22 @@ import SwiftUI
 /// Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8.1, 8.3, 8.6, 9.1
 struct SettingsView: View {
     @EnvironmentObject var persistenceService: JSONPersistenceService
-    @EnvironmentObject var bleService: MockBLEService
+    @EnvironmentObject var bleService: BLEService
 
-    @StateObject private var viewModel: SettingsViewModel
+    @StateObject private var viewModel: SettingsViewModel<BLEService>
 
     // MARK: - Alert State
 
     @State private var showResetOnboardingAlert = false
     @State private var showResetAllDataAlert = false
-    @State private var deviceToForget: MockDevice?
+    @State private var deviceToForget: BLEDevice?
     @State private var editingDeviceID: String?
     @State private var editedName: String = ""
 
     // MARK: - Init
 
     /// Creates the SettingsView, injecting the shared services into the ViewModel.
-    init(persistenceService: JSONPersistenceService, bleService: MockBLEService) {
+    init(persistenceService: JSONPersistenceService, bleService: BLEService) {
         _viewModel = StateObject(wrappedValue: SettingsViewModel(
             persistenceService: persistenceService,
             bleService: bleService
@@ -92,7 +92,7 @@ struct SettingsView: View {
         }
     }
 
-    private func deviceRow(for device: MockDevice) -> some View {
+    private func deviceRow(for device: BLEDevice) -> some View {
         HStack(spacing: 12) {
             // Unit type icon (Requirement 7.1)
             Image(systemName: device.unitType == .interior
@@ -295,7 +295,7 @@ struct SettingsView: View {
 
     // MARK: - Helpers
 
-    private func statusColor(for device: MockDevice) -> Color {
+    private func statusColor(for device: BLEDevice) -> Color {
         if viewModel.isConnected(device) {
             return .green
         } else if device.isReachable {
@@ -337,12 +337,12 @@ struct SettingsView: View {
         return formatter.localizedString(for: date, relativeTo: Date())
     }
 
-    private func deviceAccessibilityLabel(for device: MockDevice) -> String {
+    private func deviceAccessibilityLabel(for device: BLEDevice) -> String {
         let unitTypeLabel = device.unitType == .interior ? "Interior unit" : "Exterior unit"
         return "\(device.name), \(unitTypeLabel), \(viewModel.connectionStatus(for: device))"
     }
 
-    private func commitRename(device: MockDevice) {
+    private func commitRename(device: BLEDevice) {
         let trimmed = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             viewModel.renameDevice(device, to: trimmed)

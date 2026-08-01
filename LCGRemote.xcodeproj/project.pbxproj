@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		08D895A40064A430F89784D5 /* PresetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65607730BA3928E1D1F71371 /* PresetsView.swift */; };
+		09B1C2D3E4F5A6B7C8D9E0F1 /* BLEDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A1B2C3D4E5F6A7B8C9D0E1 /* BLEDevice.swift */; };
 		0AE15185E395CAB935105155 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50648161C7EEDC65921DE889 /* OnboardingView.swift */; };
 		10E8D55FE3C642F6BC3030CB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B01A83615546F9D5327193 /* SettingsView.swift */; };
+		1A2B3C4D5E6F7A8B9C0D1E2F /* BLEAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3C4D5E6F7A8B9C0D1E2F3A /* BLEAdapter.swift */; };
 		1C9C3C5937714A3251629A75 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04694E66B2D0101212E08182 /* Models.swift */; };
 		25560D126B2F91E0BA3C82F5 /* LCGRemoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */; };
 		27DEB2C34346884C6A7EAD7D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */; };
@@ -36,6 +38,7 @@
 		9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */; };
 		A247808B233670720DC6521D /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45715F011F784E83D4D12129 /* StatusView.swift */; };
 		A3855BD4300CE8C9AB9CF296 /* LCGRemoteWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFB5BD244C0C746A363C507 /* LCGRemoteWatchApp.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* BLEServiceAlias.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* BLEServiceAlias.swift */; };
 		B84A26A79228516C3C370CFE /* PresetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA262423AAC39E6AC667489 /* PresetListView.swift */; };
 		BB24D9972E420CC4FEE6B735 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6985F28639758409808890D1 /* SwiftDataModels.swift */; };
 		BDA085190D674031802D044D /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34431E84D4878B925CFE05ED /* SeedData.swift */; };
@@ -48,6 +51,7 @@
 		E803AD82E2428506EEB57D65 /* CommandEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */; };
 		F2471DEA7F857FD8BAFAFE20 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6321BD813B676C8EC8A217F8 /* CoreBluetooth.framework */; };
 		F45C613433A159393FE467EB /* BLETypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25DA52F47D2D348EF9398C4 /* BLETypes.swift */; };
+		FA1B2C3D4E5F6A7B8C9D0E1F /* BLEServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2C3D4E5F6A7B8C9D0E1FA1 /* BLEServiceProtocol.swift */; };
 		FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +68,7 @@
 /* Begin PBXFileReference section */
 		0215CD2127FFAE250E63C63E /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
 		0240EF6FC1677FF9570B115A /* MockBLEService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBLEService.swift; sourceTree = "<group>"; };
+		03A1B2C3D4E5F6A7B8C9D0E1 /* BLEDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEDevice.swift; sourceTree = "<group>"; };
 		04694E66B2D0101212E08182 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		078F9D92FF19FE31F95BF0CE /* CalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationView.swift; sourceTree = "<group>"; };
 		0C69F18E8F058A9A3F1AAE73 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -72,7 +77,8 @@
 		114F672998D4C678052DCFE2 /* LCGRemoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGRemoteTests.swift; sourceTree = "<group>"; };
 		141137E238F25ED2558A4C02 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		22F45A974F264A7D97B344AB /* LCGRemote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LCGRemote.entitlements; sourceTree = "<group>"; };
-		304271130AA2506DB56B0EE6 /* LCGRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LCGRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B3C4D5E6F7A8B9C0D1E2F3A /* BLEAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEAdapter.swift; sourceTree = "<group>"; };
+		304271130AA2506DB56B0EE6 /* LCGRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LCGRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		321C5BC1106A067BF6E3C2D6 /* WatchSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionManager.swift; sourceTree = "<group>"; };
 		32F7CEEDF2D5FCD2B611FD6C /* PresetsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetsViewModel.swift; sourceTree = "<group>"; };
 		3310EAAFF8CE35E3C1E54530 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
@@ -96,8 +102,10 @@
 		8DA262423AAC39E6AC667489 /* PresetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetListView.swift; sourceTree = "<group>"; };
 		957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandEncoder.swift; sourceTree = "<group>"; };
 		9E7FD56513DAEE9D1A11E076 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* BLEServiceAlias.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEServiceAlias.swift; sourceTree = "<group>"; };
 		A350E4E632BC17FC08B51450 /* LCGComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCGComplication.swift; sourceTree = "<group>"; };
 		A76958A56FEA27160517E036 /* DeviceControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlView.swift; sourceTree = "<group>"; };
+		AB2C3D4E5F6A7B8C9D0E1FA1 /* BLEServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEServiceProtocol.swift; sourceTree = "<group>"; };
 		ABA271CBBA376C499A54BFCE /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B2FBB94F11186DF47ABC502A /* DeviceControlViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlViewModel.swift; sourceTree = "<group>"; };
 		C4AD5D7EC205E4A75C71BDEA /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
@@ -190,6 +198,7 @@
 		537C9C697190280FFAD0866C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				03A1B2C3D4E5F6A7B8C9D0E1 /* BLEDevice.swift */,
 				F25DA52F47D2D348EF9398C4 /* BLETypes.swift */,
 				04694E66B2D0101212E08182 /* Models.swift */,
 				34431E84D4878B925CFE05ED /* SeedData.swift */,
@@ -208,10 +217,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		5A1B2C3D4E5F6A7B8C9D0E1F /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				AB2C3D4E5F6A7B8C9D0E1FA1 /* BLEServiceProtocol.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
 		619DDCF662E5B6784256806F /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				2B3C4D5E6F7A8B9C0D1E2F3A /* BLEAdapter.swift */,
 				3310EAAFF8CE35E3C1E54530 /* BLEManager.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* BLEServiceAlias.swift */,
 				957F1A77DCFEBF39D51427CE /* CommandEncoder.swift */,
 				47B2358D47DBA72E49064DB3 /* DiagnosticsLogger.swift */,
 				54EB041A234EE283C46829AB /* HapticsService.swift */,
@@ -344,6 +363,7 @@
 				2764AD569B1034541DB7798B /* App */,
 				2D81FEDC7F2DE51ECFC0E2FA /* Intents */,
 				537C9C697190280FFAD0866C /* Models */,
+				5A1B2C3D4E5F6A7B8C9D0E1F /* Protocols */,
 				EF98D56299C11ADEED921728 /* Resources */,
 				619DDCF662E5B6784256806F /* Services */,
 				7C598DEF0E1A07F5DE6A5313 /* ViewModels */,
@@ -418,9 +438,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					72D85AB9D1196B0910E3C83A = {
-						DevelopmentTeam = "";
-					};
 					F2D5A99C34514FDED24B6175 = {
 						DevelopmentTeam = "";
 					};
@@ -475,6 +492,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				466DFE13A68065F7AA3517F7 /* BLEManager.swift in Sources */,
+				1A2B3C4D5E6F7A8B9C0D1E2F /* BLEAdapter.swift in Sources */,
+				09B1C2D3E4F5A6B7C8D9E0F1 /* BLEDevice.swift in Sources */,
+				FA1B2C3D4E5F6A7B8C9D0E1F /* BLEServiceProtocol.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F1A2 /* BLEServiceAlias.swift in Sources */,
 				F45C613433A159393FE467EB /* BLETypes.swift in Sources */,
 				9B5E92A4799D3017E9E4262B /* CalibrationView.swift in Sources */,
 				2B910B5E7E6B4D7E52E66C61 /* CalibrationViewModel.swift in Sources */,
@@ -525,7 +546,7 @@
 				CODE_SIGN_ENTITLEMENTS = LCGRemote/LCGRemote.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = FW8G638TZ4;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\".\"",
@@ -637,7 +658,7 @@
 				CODE_SIGN_ENTITLEMENTS = LCGRemote/LCGRemote.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = FW8G638TZ4;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\".\"",
