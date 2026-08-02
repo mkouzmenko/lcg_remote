@@ -3,8 +3,8 @@ import SwiftUI
 import UIKit
 #endif
 
-/// Unified Control View displaying all buttons (call elevator + floor buttons) on one screen.
-/// Each button auto-connects to its configured BLE device and sends X/Y/Z coordinates.
+/// Unified Control View displaying elevator buttons grouped by exterior (call) and interior (floor).
+/// If multiple elevators are configured, shows a segmented picker to switch between them.
 struct DeviceControlView: View {
     @ObservedObject var viewModel: DeviceControlViewModel<BLEService>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -16,15 +16,33 @@ struct DeviceControlView: View {
 
     var body: some View {
         VStack(spacing: 16) {
+            // Elevator picker (only if multiple elevators)
+            if viewModel.hasMultipleElevators {
+                elevatorPicker
+            }
+
             statusArea
 
             Spacer()
 
-            buttonGrid
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Exterior buttons section
+                    if !viewModel.exteriorButtons.isEmpty {
+                        exteriorSection
+                    }
+
+                    // Floor buttons section
+                    if !viewModel.floorButtons.isEmpty {
+                        floorSection
+                    }
+                }
+                .padding(.horizontal)
+            }
 
             Spacer()
         }
-        .padding()
+        .padding(.vertical)
         .navigationTitle("Control")
         .onAppear {
             viewModel.startScan()
@@ -32,6 +50,22 @@ struct DeviceControlView: View {
         .onChange(of: viewModel.deviceStatus) { newStatus in
             announceStatusChange(newStatus)
         }
+    }
+
+    // MARK: - Elevator Picker
+
+    private var elevatorPicker: some View {
+        Picker("Elevator", selection: Binding(
+            get: { viewModel.selectedElevatorID ?? UUID() },
+            set: { viewModel.selectElevator($0) }
+        )) {
+            ForEach(viewModel.elevators) { elevator in
+                Text(elevator.name).tag(elevator.id)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .accessibilityLabel("Select elevator")
     }
 
     // MARK: - Status Area
@@ -91,64 +125,80 @@ struct DeviceControlView: View {
         }
     }
 
-    // MARK: - Button Grid
+    // MARK: - Exterior Buttons Section
 
-    private var buttonGrid: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(viewModel.buttonConfigs.sorted(by: { $0.sortOrder < $1.sortOrder })) { config in
-                controlButton(for: config)
+    private var exteriorSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Call Elevator")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .accessibilityAddTraits(.isHeader)
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(viewModel.exteriorButtons) { button in
+                    Button {
+                        viewModel.tapExteriorButton(button)
+                    } label: {
+                        Text(button.label)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 70)
+                            .foregroundStyle(.white)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.orange)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.deviceStatus != .idle)
+                    .accessibilityLabel(button.label)
+                    .accessibilityHint("Double-tap to call elevator")
+                    .accessibilityAddTraits(.isButton)
+                }
             }
         }
-        .padding(.horizontal)
     }
 
-    @ViewBuilder
-    private func controlButton(for config: ButtonConfig) -> some View {
-        if config.deviceType == .exterior {
-            // Call Elevator button — prominent styling
-            Button {
-                viewModel.tapButton(config)
-            } label: {
-                Text(config.label)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 70)
-                    .foregroundStyle(.white)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.orange)
-                    )
+    // MARK: - Floor Buttons Section
+
+    private var floorSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Floors")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .accessibilityAddTraits(.isHeader)
+
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(viewModel.floorButtons) { button in
+                    Button {
+                        viewModel.tapFloorButton(button)
+                    } label: {
+                        Text(button.label)
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 60)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.blue.opacity(0.15))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.blue, lineWidth: 2)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.deviceStatus != .idle)
+                    .accessibilityLabel("Floor \(button.label)")
+                    .accessibilityHint("Double-tap to select floor \(button.label)")
+                    .accessibilityAddTraits(.isButton)
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(viewModel.deviceStatus != .idle)
-            .accessibilityLabel(config.label)
-            .accessibilityHint("Double-tap to \(config.label.lowercased())")
-            .accessibilityAddTraits(.isButton)
-        } else {
-            // Floor button — standard styling
-            Button {
-                viewModel.tapButton(config)
-            } label: {
-                Text(config.label)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.accentColor.opacity(0.15))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.accentColor, lineWidth: 2)
-                    )
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel.deviceStatus != .idle)
-            .accessibilityLabel("Floor \(config.label)")
-            .accessibilityHint("Double-tap to select floor \(config.label)")
-            .accessibilityAddTraits(.isButton)
         }
     }
 

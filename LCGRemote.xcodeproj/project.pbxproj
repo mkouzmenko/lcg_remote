@@ -56,6 +56,7 @@
 		FCB8B98E40E5EE2589D5FD62 /* JSONPersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCF67267A6533BEF43ACCA4 /* JSONPersistenceService.swift */; };
 		FD1A2B3C4D5E6F7A8B9C0D1E /* ButtonConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1A2B3C4D5E6F7A8B9C0D1E /* ButtonConfigurationView.swift */; };
 		FF1A2B3C4D5E6F7A8B9C0D1E /* ButtonConfigViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA1B2C3D4E5F6A7B8C9D0E1 /* ButtonConfigViewModel.swift */; };
+		AA2B3C4D5E6F7A8B9C0D1E2F /* EditElevatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F6A7B8C9D0E1F /* EditElevatorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -122,6 +123,7 @@
 		F527B00B97EF904CDEA9BD89 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
 		FE1A2B3C4D5E6F7A8B9C0D1E /* ButtonConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonConfigurationView.swift; sourceTree = "<group>"; };
 		FFA1B2C3D4E5F6A7B8C9D0E1 /* ButtonConfigViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonConfigViewModel.swift; sourceTree = "<group>"; };
+		AA1B2C3D4E5F6A7B8C9D0E1F /* EditElevatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditElevatorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,6 +319,7 @@
 			isa = PBXGroup;
 			children = (
 				58B01A83615546F9D5327193 /* SettingsView.swift */,
+				AA1B2C3D4E5F6A7B8C9D0E1F /* EditElevatorView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -537,6 +540,7 @@
 				39EABFA67EFFFEDF376C205E /* StatusMonitor.swift in Sources */,
 				BB24D9972E420CC4FEE6B735 /* SwiftDataModels.swift in Sources */,
 				C08774D0B050C39B5D8C64D2 /* WatchConnectivityService.swift in Sources */,
+				AA2B3C4D5E6F7A8B9C0D1E2F /* EditElevatorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

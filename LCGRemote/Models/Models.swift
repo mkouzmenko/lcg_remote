@@ -8,55 +8,58 @@ enum UnitType: String, Codable, Hashable {
     case exterior
 }
 
-// MARK: - ButtonConfig
+// MARK: - ElevatorConfig
 
-/// Unified button configuration for the control screen.
-/// Each button targets a device group (interior/exterior) and sends configured X/Y/Z coordinates.
-/// The actual BLE device is determined by the DeviceGroupConfig in Settings.
-struct ButtonConfig: Identifiable, Codable, Hashable {
+/// Top-level configuration for a single elevator.
+/// Groups an interior device (shared by all floor buttons) with floor and exterior buttons.
+struct ElevatorConfig: Identifiable, Codable, Hashable {
     let id: UUID
-    var label: String
-    var deviceType: UnitType  // .interior or .exterior — determines which device group to use
-    var x: Int   // 0–250
-    var y: Int   // 0–250
-    var z: Int   // 0–250
+    var name: String                        // e.g., "Elevator A"
+    var interiorDeviceID: String?           // BLE device for interior (shared by all floor buttons)
+    var interiorDeviceName: String?         // Display name
+    var floorButtons: [FloorButtonConfig]   // Lobby, 1, 2, 3...
+    var exteriorButtons: [ExteriorButtonConfig]  // Call F1, Call F2...
+}
+
+// MARK: - FloorButtonConfig
+
+/// Configuration for a single floor button inside the elevator.
+/// All floor buttons share the elevator's interior BLE device.
+struct FloorButtonConfig: Identifiable, Codable, Hashable {
+    let id: UUID
+    var label: String       // "Lobby", "1", "2"...
+    var x: Int              // 0-250
+    var y: Int              // 0-250
+    var z: Int              // 0-250
     var sortOrder: Int
 }
 
-// MARK: - DeviceGroupConfig
+// MARK: - ExteriorButtonConfig
 
-/// Configuration mapping device groups to specific BLE peripherals.
-/// All interior buttons use the Interior Group device; all exterior buttons use the Exterior Group device.
-struct DeviceGroupConfig: Codable {
-    var interiorDeviceID: String?   // BLE peripheral UUID string
-    var interiorDeviceName: String? // Display name (e.g., "LiftGateIn2")
-    var exteriorDeviceID: String?   // BLE peripheral UUID string
-    var exteriorDeviceName: String? // Display name (e.g., "LiftGateEx2")
+/// Configuration for an exterior call button (e.g., hallway call button).
+/// Each exterior button can have its own BLE device.
+struct ExteriorButtonConfig: Identifiable, Codable, Hashable {
+    let id: UUID
+    var label: String       // "Call F1", "Call F2"...
+    var deviceID: String?   // Specific BLE device for this button
+    var deviceName: String? // Display name
+    var x: Int              // 0-250
+    var y: Int              // 0-250
+    var z: Int              // 0-250
+    var sortOrder: Int
 }
 
-// MARK: - FloorProfile
+// MARK: - FloorProfile (Legacy)
 
 /// A saved configuration mapping a floor button label to its X, Y, Z motor coordinates.
 /// Kept for backward compatibility with persistence and calibration.
 struct FloorProfile: Identifiable, Codable, Hashable {
     let id: UUID
     var label: String
-    var x: Int   // 0–144
-    var y: Int   // 0–208
-    var z: Int   // 0–100
+    var x: Int   // 0–250
+    var y: Int   // 0–250
+    var z: Int   // 0–250
     var sortOrder: Int
-}
-
-// MARK: - ButtonMap
-
-/// A complete set of FloorProfiles for a simulated Interior Unit.
-struct ButtonMap: Identifiable, Codable, Hashable {
-    let id: UUID
-    var name: String
-    var deviceID: String
-    var profiles: [FloorProfile]
-    var createdDate: Date
-    var modifiedDate: Date
 }
 
 // MARK: - LocationPreset

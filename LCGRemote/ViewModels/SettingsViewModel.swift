@@ -1,14 +1,13 @@
 import Combine
 import Foundation
 
-/// ViewModel driving the Settings View. Manages the device list with custom names,
+/// ViewModel driving the Settings View. Manages elevator configurations,
 /// diagnostics log display, and reset operations.
-/// Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7
 @MainActor
 final class SettingsViewModel<Service: BLEServiceProtocol>: ObservableObject {
     // MARK: - Published Properties
 
-    @Published var devices: [BLEDevice] = []
+    @Published var elevators: [ElevatorConfig] = []
     @Published var diagnosticsLog: [DiagnosticsEntry] = []
 
     // MARK: - Dependencies
@@ -26,44 +25,48 @@ final class SettingsViewModel<Service: BLEServiceProtocol>: ObservableObject {
         self.persistenceService = persistenceService
         self.bleService = bleService
 
-        loadDevices()
+        loadElevators()
         loadDiagnostics()
-        observeConnectionState()
     }
 
-    // MARK: - Device Management (Requirements 7.1, 7.2, 7.7)
+    // MARK: - Elevator Management
 
-    /// Renames a device by persisting a custom name mapping.
-    /// The custom name is stored in device_names.json via JSONPersistenceService.
-    func renameDevice(_ device: BLEDevice, to name: String) {
-        guard let index = devices.firstIndex(where: { $0.id == device.id }) else { return }
-        devices[index].name = name
+    /// Adds a new elevator with default configuration.
+    func addElevator() {
+        let elevatorNumber = elevators.count + 1
+        let name = elevatorNumber == 1 ? "Elevator A" : "Elevator \(Character(UnicodeScalar(64 + elevatorNumber)!))"
+        let newElevator = ElevatorConfig(
+            id: UUID(),
+            name: name,
+            interiorDeviceID: nil,
+            interiorDeviceName: nil,
+            floorButtons: [
+                FloorButtonConfig(id: UUID(), label: "Lobby", x: 10, y: 20, z: 30, sortOrder: 0),
+                FloorButtonConfig(id: UUID(), label: "1", x: 10, y: 50, z: 30, sortOrder: 1),
+            ],
+            exteriorButtons: [
+                ExteriorButtonConfig(id: UUID(), label: "Call Elevator", deviceID: nil, deviceName: nil, x: 50, y: 100, z: 30, sortOrder: 0),
+            ]
+        )
+        elevators.append(newElevator)
+        persist()
+    }
 
-        // Persist device name mapping
-        var names = persistenceService.loadDeviceNames()
-        names[device.id] = name
-        do {
-            try persistenceService.saveDeviceNames(names)
-        } catch {
-            // Persistence error — non-fatal for prototype
+    /// Updates an existing elevator.
+    func updateElevator(_ elevator: ElevatorConfig) {
+        if let index = elevators.firstIndex(where: { $0.id == elevator.id }) {
+            elevators[index] = elevator
+            persist()
         }
     }
 
-    /// Removes a device from the saved device list.
-    func forgetDevice(_ device: BLEDevice) {
-        devices.removeAll { $0.id == device.id }
-
-        // Remove custom name if present
-        var names = persistenceService.loadDeviceNames()
-        names.removeValue(forKey: device.id)
-        do {
-            try persistenceService.saveDeviceNames(names)
-        } catch {
-            // Persistence error — non-fatal for prototype
-        }
+    /// Deletes an elevator.
+    func deleteElevator(_ elevator: ElevatorConfig) {
+        elevators.removeAll { $0.id == elevator.id }
+        persist()
     }
 
-    // MARK: - Reset Operations (Requirements 7.6, 13.5)
+    // MARK: - Reset Operations
 
     /// Clears the onboarding completion flag so the onboarding flow is shown on next launch.
     func resetOnboarding() {
@@ -78,55 +81,26 @@ final class SettingsViewModel<Service: BLEServiceProtocol>: ObservableObject {
             // Reset error — non-fatal for prototype
         }
 
-        // Reload devices from seed data (custom names cleared)
-        loadDevices()
+        // Reload from seed data
+        loadElevators()
     }
 
     // MARK: - Private Helpers
 
-    /// Loads the device list from SeedData, merging any persisted custom names.
-    /// Connection status is derived from the BLE service state.
-    private func loadDevices() {
-        let customNames = persistenceService.loadDeviceNames()
-        devices = SeedData.devices.map { seedDevice in
-            var device = seedDevice
-            if let customName = customNames[device.id] {
-                device.name = customName
-            }
-            return device
+    private func loadElevators() {
+        let persisted = persistenceService.loadElevators()
+        if persisted.isEmpty {
+            elevators = SeedData.defaultElevators
+        } else {
+            elevators = persisted
         }
     }
 
-    /// Loads hardcoded sample diagnostics entries.
     private func loadDiagnostics() {
         diagnosticsLog = SeedData.sampleDiagnostics
     }
 
-    /// Observes BLE service connection state to reflect device status in the list.
-    private func observeConnectionState() {
-        bleService.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
-            .store(in: &cancellables)
-    }
-
-    // MARK: - Computed Helpers
-
-    /// Returns the connection status label for a given device based on the BLE service state.
-    func connectionStatus(for device: BLEDevice) -> String {
-        if bleService.connectedDevice?.id == device.id {
-            return "Connected"
-        } else if device.isReachable {
-            return "Available"
-        } else {
-            return "Not in Range"
-        }
-    }
-
-    /// Returns whether a device is currently connected.
-    func isConnected(_ device: BLEDevice) -> Bool {
-        bleService.connectedDevice?.id == device.id
+    private func persist() {
+        try? persistenceService.saveElevators(elevators)
     }
 }

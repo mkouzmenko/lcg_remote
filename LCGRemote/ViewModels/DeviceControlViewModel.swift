@@ -1,15 +1,15 @@
 import Foundation
 import Combine
 
-/// ViewModel managing the unified Control screen.
-/// Shows all buttons (call + floors) on one screen. Each button auto-connects
-/// to its configured BLE device and sends X/Y/Z coordinates.
+/// ViewModel managing the unified Control screen with elevator-based grouping.
+/// Shows exterior (call) buttons and floor buttons for the selected elevator.
 @MainActor
 final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var buttonConfigs: [ButtonConfig] = []
+    @Published var elevators: [ElevatorConfig] = []
+    @Published var selectedElevatorID: UUID?
     @Published var deviceStatus: BLEDeviceStatus = .idle
     @Published var statusMessage: String = ""
 
@@ -22,12 +22,28 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
 
     // MARK: - Command Tracking
 
-    private var lastButtonConfig: ButtonConfig?
+    private enum LastCommand {
+        case floor(ElevatorConfig, FloorButtonConfig)
+        case exterior(ExteriorButtonConfig)
+    }
+    private var lastCommand: LastCommand?
 
     // MARK: - Computed
 
-    var connectedDevice: BLEDevice? {
-        bleService.connectedDevice
+    var selectedElevator: ElevatorConfig? {
+        elevators.first(where: { $0.id == selectedElevatorID })
+    }
+
+    var floorButtons: [FloorButtonConfig] {
+        selectedElevator?.floorButtons.sorted(by: { $0.sortOrder < $1.sortOrder }) ?? []
+    }
+
+    var exteriorButtons: [ExteriorButtonConfig] {
+        selectedElevator?.exteriorButtons.sorted(by: { $0.sortOrder < $1.sortOrder }) ?? []
+    }
+
+    var hasMultipleElevators: Bool {
+        elevators.count > 1
     }
 
     // MARK: - Initialization
@@ -37,20 +53,7 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
         self.hapticsService = hapticsService
         self.persistenceService = persistenceService
 
-        loadButtonConfigs()
-        self.deviceStatus = bleService.deviceStatus
-        self.statusMessage = bleService.statusMessage
-
-        setupBindings()
-    }
-
-    /// Convenience init without persistenceService for backward compatibility.
-    init(bleService: Service, hapticsService: HapticsService) {
-        self.bleService = bleService
-        self.hapticsService = hapticsService
-        self.persistenceService = JSONPersistenceService()
-
-        loadButtonConfigs()
+        loadElevators()
         self.deviceStatus = bleService.deviceStatus
         self.statusMessage = bleService.statusMessage
 
@@ -59,29 +62,43 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
 
     // MARK: - Public API
 
-    /// Taps a button — auto-connects to the configured device and sends X/Y/Z.
-    func tapButton(_ config: ButtonConfig) {
+    /// Taps a floor button — auto-connects to elevator's interior device and sends X/Y/Z.
+    func tapFloorButton(_ button: FloorButtonConfig) {
+        guard deviceStatus == .idle, let elevator = selectedElevator else { return }
+
+        lastCommand = .floor(elevator, button)
+        hapticsService.buttonTap()
+        bleService.sendFloorCommand(elevator: elevator, button: button)
+    }
+
+    /// Taps an exterior button — auto-connects to the button's device and sends X/Y/Z.
+    func tapExteriorButton(_ button: ExteriorButtonConfig) {
         guard deviceStatus == .idle else { return }
 
-        lastButtonConfig = config
+        lastCommand = .exterior(button)
         hapticsService.buttonTap()
-        bleService.sendCommand(buttonConfig: config)
+        bleService.sendExteriorCommand(button: button)
     }
 
     /// Re-executes the last failed command.
     func retryLastCommand() {
-        guard let config = lastButtonConfig else { return }
-        tapButton(config)
+        guard let last = lastCommand else { return }
+        switch last {
+        case .floor(_, let button):
+            tapFloorButton(button)
+        case .exterior(let button):
+            tapExteriorButton(button)
+        }
     }
 
-    /// Disconnects from the current device.
-    func disconnect() {
-        bleService.disconnect()
+    /// Selects an elevator by ID.
+    func selectElevator(_ id: UUID) {
+        selectedElevatorID = id
     }
 
-    /// Reloads button configs (called when returning from settings/calibration).
-    func reloadButtonConfigs() {
-        loadButtonConfigs()
+    /// Reloads elevator configs (called when returning from settings).
+    func reloadElevators() {
+        loadElevators()
     }
 
     /// Triggers a BLE scan to discover nearby devices.
@@ -89,35 +106,24 @@ final class DeviceControlViewModel<Service: BLEServiceProtocol>: ObservableObjec
         bleService.startScan()
     }
 
-    /// Legacy support: select floor via FloorProfile.
-    func selectFloor(_ profile: FloorProfile) {
-        let config = ButtonConfig(
-            id: profile.id,
-            label: profile.label,
-            deviceType: .interior,
-            x: profile.x,
-            y: profile.y,
-            z: profile.z,
-            sortOrder: profile.sortOrder
-        )
-        tapButton(config)
-    }
-
-    /// Legacy support: call elevator.
-    func callElevator() {
-        if let callConfig = buttonConfigs.first(where: { $0.deviceType == .exterior }) {
-            tapButton(callConfig)
-        }
+    /// Disconnects from the current device.
+    func disconnect() {
+        bleService.disconnect()
     }
 
     // MARK: - Private
 
-    private func loadButtonConfigs() {
-        let persisted = persistenceService.loadButtonConfigs()
+    private func loadElevators() {
+        let persisted = persistenceService.loadElevators()
         if persisted.isEmpty {
-            buttonConfigs = SeedData.defaultButtonConfigs
+            elevators = SeedData.defaultElevators
         } else {
-            buttonConfigs = persisted.sorted(by: { $0.sortOrder < $1.sortOrder })
+            elevators = persisted
+        }
+
+        // Select first elevator if nothing selected
+        if selectedElevatorID == nil {
+            selectedElevatorID = elevators.first?.id
         }
     }
 

@@ -26,8 +26,6 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
 
     // MARK: - Scanning
 
-    /// Starts a simulated BLE scan. After a 1.5s delay, populates discoveredDevices
-    /// with the hardcoded seed devices.
     func startScan() {
         isScanning = true
         discoveredDevices = []
@@ -39,15 +37,12 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    /// Stops the simulated scan, retaining the current device list.
     func stopScan() {
         isScanning = false
     }
 
     // MARK: - Connection
 
-    /// Simulates connecting to a device. Reachable devices connect after 1.5s;
-    /// unreachable devices produce an error after 3s.
     func connect(to device: BLEDevice) {
         connectionState = .connecting
         statusMessage = "Connecting..."
@@ -70,7 +65,6 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    /// Disconnects from the current device, resetting all state.
     func disconnect() {
         connectedDevice = nil
         connectionState = .disconnected
@@ -78,85 +72,10 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         statusMessage = ""
     }
 
-    // MARK: - Command Execution
+    // MARK: - Elevator Commands
 
-    /// Executes a floor selection command with the state machine:
-    /// Idle → Busy (2s) → Done (1s) → Idle, or every 5th command: Idle → Busy → Error → Idle (2s).
-    func executeFloorCommand(profile: FloorProfile) {
-        commandCount += 1
-        let shouldError = (commandCount % 5 == 0)
-
-        deviceStatus = .busy
-        statusMessage = "Pressing button..."
-
-        let busyDuration = commandDuration // 2s default
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + busyDuration) { [weak self] in
-            guard let self = self else { return }
-
-            if shouldError {
-                self.deviceStatus = .error
-                self.statusMessage = "Command failed. Please retry."
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
-                }
-            } else {
-                self.deviceStatus = .done
-                self.statusMessage = "Floor selected"
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
-                }
-            }
-        }
-    }
-
-    /// Executes a call elevator command with the state machine:
-    /// Idle → Busy (1.5s) → Done (1s) → Idle, or every 5th command: Idle → Busy → Error → Idle (2s).
-    func executeCallCommand() {
-        commandCount += 1
-        let shouldError = (commandCount % 5 == 0)
-
-        deviceStatus = .busy
-        statusMessage = "Calling elevator..."
-
-        let busyDuration: TimeInterval = 1.5
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + busyDuration) { [weak self] in
-            guard let self = self else { return }
-
-            if shouldError {
-                self.deviceStatus = .error
-                self.statusMessage = "Command failed. Please retry."
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
-                }
-            } else {
-                self.deviceStatus = .done
-                self.statusMessage = "Elevator called"
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
-                }
-            }
-        }
-    }
-
-    // MARK: - Unified Button Command
-
-    /// Simulates sending a command for a ButtonConfig using device groups.
-    /// In mock mode, simply simulates the command regardless of device group assignment.
-    func sendCommand(buttonConfig: ButtonConfig) {
+    /// Simulates sending a floor command for an elevator's interior device.
+    func sendFloorCommand(elevator: ElevatorConfig, button: FloorButtonConfig) {
         commandCount += 1
         let shouldError = (commandCount % 7 == 0)
 
@@ -166,18 +85,18 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
             guard let self = self else { return }
 
-            // Simulate finding device from device groups
-            let device = SeedData.devices.first(where: { $0.unitType == buttonConfig.deviceType })
+            // Simulate finding interior device
+            let device = SeedData.devices.first(where: { $0.id == elevator.interiorDeviceID })
                 ?? BLEDevice(
-                    id: buttonConfig.deviceType == .exterior ? "exterior-main" : "interior-lobby",
-                    name: buttonConfig.deviceType == .exterior ? "LiftGateEx-Device" : "LiftGateIn-Device",
-                    unitType: buttonConfig.deviceType,
+                    id: elevator.interiorDeviceID ?? "interior-lobby",
+                    name: elevator.interiorDeviceName ?? "LiftGateIn-Device",
+                    unitType: .interior,
                     rssi: -50,
                     isReachable: true
                 )
             self.connectedDevice = device
             self.connectionState = .connected
-            self.statusMessage = "Sending command..."
+            self.statusMessage = "Pressing button..."
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self else { return }
@@ -191,7 +110,7 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
                     }
                 } else {
                     self.deviceStatus = .done
-                    self.statusMessage = buttonConfig.deviceType == .exterior ? "Elevator called" : "Floor selected"
+                    self.statusMessage = "Floor selected"
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                         self?.deviceStatus = .idle
                         self?.statusMessage = ""
@@ -201,58 +120,105 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    // MARK: - Auto-Connect Commands
+    /// Simulates sending an exterior call command.
+    func sendExteriorCommand(button: ExteriorButtonConfig) {
+        commandCount += 1
+        let shouldError = (commandCount % 7 == 0)
 
-    /// Simulates connecting to a device by ID and executing a floor command.
-    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile) {
         deviceStatus = .busy
         statusMessage = "Connecting..."
 
         DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
             guard let self = self else { return }
-            // Simulate finding device from scan
-            let device = SeedData.devices.first(where: { $0.id == deviceID })
-                ?? BLEDevice(id: deviceID, name: "LiftGateIn-Device", unitType: .interior, rssi: -50, isReachable: true)
+
+            // Simulate finding exterior device
+            let device = SeedData.devices.first(where: { $0.id == button.deviceID })
+                ?? BLEDevice(
+                    id: button.deviceID ?? "exterior-main",
+                    name: button.deviceName ?? "LiftGateEx-Device",
+                    unitType: .exterior,
+                    rssi: -50,
+                    isReachable: true
+                )
             self.connectedDevice = device
             self.connectionState = .connected
-            self.statusMessage = "Pressing button..."
+            self.statusMessage = "Calling elevator..."
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + self.commandDuration) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self else { return }
-                self.deviceStatus = .done
-                self.statusMessage = "Floor selected"
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
+                if shouldError {
+                    self.deviceStatus = .error
+                    self.statusMessage = "Command failed. Please retry."
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                        self?.deviceStatus = .idle
+                        self?.statusMessage = ""
+                    }
+                } else {
+                    self.deviceStatus = .done
+                    self.statusMessage = "Elevator called"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                        self?.deviceStatus = .idle
+                        self?.statusMessage = ""
+                    }
                 }
             }
         }
     }
 
-    /// Simulates connecting to a device by ID and executing a call elevator command.
-    func connectAndExecuteCall(deviceID: String, profile: FloorProfile) {
+    // MARK: - Legacy Commands
+
+    func executeFloorCommand(profile: FloorProfile) {
+        commandCount += 1
+        let shouldError = (commandCount % 5 == 0)
+
         deviceStatus = .busy
-        statusMessage = "Connecting..."
+        statusMessage = "Pressing button..."
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + connectionDelay) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + commandDuration) { [weak self] in
             guard let self = self else { return }
-            let device = SeedData.devices.first(where: { $0.id == deviceID })
-                ?? BLEDevice(id: deviceID, name: "LiftGateEx-Device", unitType: .exterior, rssi: -50, isReachable: true)
-            self.connectedDevice = device
-            self.connectionState = .connected
-            self.statusMessage = "Calling elevator..."
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                guard let self = self else { return }
+            if shouldError {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                    self?.deviceStatus = .idle
+                    self?.statusMessage = ""
+                }
+            } else {
+                self.deviceStatus = .done
+                self.statusMessage = "Floor selected"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.deviceStatus = .idle
+                    self?.statusMessage = ""
+                }
+            }
+        }
+    }
+
+    func executeCallCommand() {
+        commandCount += 1
+        let shouldError = (commandCount % 5 == 0)
+
+        deviceStatus = .busy
+        statusMessage = "Calling elevator..."
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self = self else { return }
+
+            if shouldError {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                    self?.deviceStatus = .idle
+                    self?.statusMessage = ""
+                }
+            } else {
                 self.deviceStatus = .done
                 self.statusMessage = "Elevator called"
-
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
-                    self.deviceStatus = .idle
-                    self.statusMessage = ""
+                    self?.deviceStatus = .idle
+                    self?.statusMessage = ""
                 }
             }
         }
@@ -260,8 +226,6 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
 
     // MARK: - Preset Execution
 
-    /// Executes a multi-step preset sequence with timed phases:
-    /// connectingExterior (1s) → callingElevator (2s) → connectingInterior (1s) → selectingFloor (2s) → done.
     func executePresetSequence(
         preset: LocationPreset,
         onPhaseChange: @escaping (PresetPhase) -> Void,
@@ -282,7 +246,6 @@ final class MockBLEService: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    /// Recursively executes each phase with its associated delay.
     private func executePhases(
         _ phases: [(PresetPhase, TimeInterval)],
         index: Int,

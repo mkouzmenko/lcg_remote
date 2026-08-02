@@ -44,48 +44,33 @@ protocol BLEServiceProtocol: ObservableObject {
     /// Disconnects from the currently connected device.
     func disconnect()
 
-    // MARK: - Commands
+    // MARK: - Elevator Commands
+
+    /// Sends a floor command: connects to the elevator's interior device and sends X/Y/Z.
+    /// - Parameters:
+    ///   - elevator: The elevator configuration containing the interior device ID.
+    ///   - button: The floor button with X/Y/Z coordinates.
+    func sendFloorCommand(elevator: ElevatorConfig, button: FloorButtonConfig)
+
+    /// Sends an exterior call command: connects to the button's device and sends X/Y/Z.
+    /// - Parameter button: The exterior button with its own device ID and X/Y/Z coordinates.
+    func sendExteriorCommand(button: ExteriorButtonConfig)
+
+    // MARK: - Legacy Commands
 
     /// Sends a floor selection command to the connected Interior Unit.
     /// - Parameter profile: The floor profile containing X, Y, Z coordinates.
     func executeFloorCommand(profile: FloorProfile)
 
     /// Sends an elevator call command to the connected Exterior Unit.
-    /// Uses the stored call button profile coordinates if available.
     func executeCallCommand()
-    
+
     /// The stored call button profile (X, Y, Z) for the exterior unit.
     var callButtonProfile: FloorProfile? { get set }
-
-    // MARK: - Unified Button Command
-
-    /// Sends a command for a ButtonConfig: connects to the appropriate device type and sends X/Y/Z.
-    /// - Parameter buttonConfig: The button configuration with device type and coordinates.
-    func sendCommand(buttonConfig: ButtonConfig)
-
-    // MARK: - Auto-Connect Commands
-
-    /// Connects to a device by ID (scanning if needed) and sends a floor command.
-    /// Handles: scan if needed → connect → write → update status.
-    /// - Parameters:
-    ///   - deviceID: The stored device identifier to connect to.
-    ///   - profile: The floor profile containing X, Y, Z coordinates.
-    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile)
-
-    /// Connects to a device by ID (scanning if needed) and sends a call elevator command.
-    /// Handles: scan if needed → connect → write → update status.
-    /// - Parameters:
-    ///   - deviceID: The stored device identifier to connect to.
-    ///   - profile: The floor profile containing X, Y, Z coordinates for the call button.
-    func connectAndExecuteCall(deviceID: String, profile: FloorProfile)
 
     // MARK: - Preset Execution
 
     /// Executes a multi-step preset sequence: connect exterior → call → connect interior → select floor.
-    /// - Parameters:
-    ///   - preset: The location preset defining the exterior/interior devices and target floor.
-    ///   - onPhaseChange: Callback invoked when the sequence transitions between phases.
-    ///   - completion: Callback invoked with `true` on success or `false` if any step fails.
     func executePresetSequence(
         preset: LocationPreset,
         onPhaseChange: @escaping (PresetPhase) -> Void,

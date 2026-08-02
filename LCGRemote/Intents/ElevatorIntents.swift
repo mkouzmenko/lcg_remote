@@ -1,107 +1,88 @@
 import AppIntents
 import Foundation
 
-// MARK: - LocationPresetEntity (Requirements 11.1, 11.2)
+// MARK: - ElevatorEntity
 
-/// An App Entity representing a LocationPreset for use in Siri Shortcuts.
-/// Allows users to select a saved preset as a parameter in intent invocations.
+/// An App Entity representing an Elevator for use in Siri Shortcuts.
 @available(iOS 16.0, macOS 13.0, *)
-struct LocationPresetEntity: AppEntity {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Location Preset"
+struct ElevatorEntity: AppEntity {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Elevator"
 
-    static var defaultQuery = LocationPresetEntityQuery()
+    static var defaultQuery = ElevatorEntityQuery()
 
     var id: UUID
     var name: String
-    var usageCount: Int
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
     }
 
-    init(id: UUID, name: String, usageCount: Int) {
+    init(id: UUID, name: String) {
         self.id = id
         self.name = name
-        self.usageCount = usageCount
     }
 
-    /// Convenience initializer from a LocationPreset model.
-    init(from preset: LocationPreset) {
-        self.id = preset.id
-        self.name = preset.name
-        self.usageCount = preset.usageCount
+    init(from elevator: ElevatorConfig) {
+        self.id = elevator.id
+        self.name = elevator.name
     }
 }
 
-// MARK: - LocationPresetEntityQuery
+// MARK: - ElevatorEntityQuery
 
-/// Query provider that fetches LocationPreset entities from persistence.
-/// Supports searching by name and listing all available presets.
 @available(iOS 16.0, macOS 13.0, *)
-struct LocationPresetEntityQuery: EntityQuery {
-    func entities(for identifiers: [UUID]) async throws -> [LocationPresetEntity] {
-        let allPresets = loadPresets()
+struct ElevatorEntityQuery: EntityQuery {
+    func entities(for identifiers: [UUID]) async throws -> [ElevatorEntity] {
+        let allElevators = loadElevators()
         let idSet = Set(identifiers)
-        return allPresets
+        return allElevators
             .filter { idSet.contains($0.id) }
-            .map { LocationPresetEntity(from: $0) }
+            .map { ElevatorEntity(from: $0) }
     }
 
-    func suggestedEntities() async throws -> [LocationPresetEntity] {
-        // Return presets sorted by usage count (most-used first) for suggestions
-        let allPresets = loadPresets()
-        return allPresets
-            .sorted { $0.usageCount > $1.usageCount }
-            .map { LocationPresetEntity(from: $0) }
+    func suggestedEntities() async throws -> [ElevatorEntity] {
+        let allElevators = loadElevators()
+        return allElevators.map { ElevatorEntity(from: $0) }
     }
 
-    /// Loads presets from the JSON persistence layer.
-    private func loadPresets() -> [LocationPreset] {
+    private func loadElevators() -> [ElevatorConfig] {
         let service = JSONPersistenceService()
-        let persisted = service.loadPresets()
+        let persisted = service.loadElevators()
         if persisted.isEmpty {
-            return SeedData.defaultPresets
+            return SeedData.defaultElevators
         }
         return persisted
     }
 }
 
-// MARK: - CallElevatorIntent (Requirement 11.1)
+// MARK: - CallElevatorIntent
 
-/// Siri Shortcut intent that calls the elevator using a saved Location Preset.
-/// When invoked via Siri or the Shortcuts app, it activates the specified
-/// Exterior Unit preset to call the elevator to the user's landing.
+/// Siri Shortcut intent that calls the elevator.
 @available(iOS 16.0, macOS 13.0, *)
 struct CallElevatorIntent: AppIntent {
     static var title: LocalizedStringResource = "Call Elevator"
-    static var description = IntentDescription("Call the elevator using a saved preset")
+    static var description = IntentDescription("Call the elevator using a configured elevator")
 
-    @Parameter(title: "Preset")
-    var preset: LocationPresetEntity?
+    @Parameter(title: "Elevator")
+    var elevator: ElevatorEntity?
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Call elevator with \(\.$preset)")
+        Summary("Call elevator \(\.$elevator)")
     }
 
-    /// Executes the intent by initiating the BLE call sequence.
-    /// Since real BLE communication is asynchronous and hardware-dependent,
-    /// this returns a dialog indicating the action was initiated.
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let preset = preset else {
-            return .result(dialog: "No preset selected. Please choose a location preset.")
+        guard let elevator = elevator else {
+            return .result(dialog: "No elevator selected. Please choose an elevator.")
         }
 
-        // Donate a user activity for future shortcut suggestions (Requirement 11.5)
-        donateActivity(presetName: preset.name, action: "callElevator")
+        donateActivity(elevatorName: elevator.name, action: "callElevator")
 
-        return .result(dialog: "Calling elevator for \(preset.name)...")
+        return .result(dialog: "Calling elevator \(elevator.name)...")
     }
 
-    /// Donates a user activity to improve shortcut suggestions.
-    private func donateActivity(presetName: String, action: String) {
-        // NSUserActivity donation for Siri suggestions (Requirement 11.4, 11.5)
+    private func donateActivity(elevatorName: String, action: String) {
         let activity = NSUserActivity(activityType: "com.lcgremote.callElevator")
-        activity.title = "Call Elevator — \(presetName)"
+        activity.title = "Call Elevator — \(elevatorName)"
         activity.isEligibleForSearch = true
         #if os(iOS) || os(watchOS)
         activity.isEligibleForPrediction = true
@@ -110,42 +91,34 @@ struct CallElevatorIntent: AppIntent {
     }
 }
 
-// MARK: - GoToFloorIntent (Requirement 11.2)
+// MARK: - GoToFloorIntent
 
-/// Siri Shortcut intent that sends the user to a specific floor using a saved Location Preset.
-/// When invoked via Siri or the Shortcuts app, it activates the full preset sequence:
-/// call elevator via Exterior Unit, then select destination floor via Interior Unit.
+/// Siri Shortcut intent that sends the user to a specific floor.
 @available(iOS 16.0, macOS 13.0, *)
 struct GoToFloorIntent: AppIntent {
     static var title: LocalizedStringResource = "Go to Floor"
-    static var description = IntentDescription("Go to a floor using a saved preset")
+    static var description = IntentDescription("Go to a floor using a configured elevator")
 
-    @Parameter(title: "Preset")
-    var preset: LocationPresetEntity?
+    @Parameter(title: "Elevator")
+    var elevator: ElevatorEntity?
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Go to floor with \(\.$preset)")
+        Summary("Go to floor with \(\.$elevator)")
     }
 
-    /// Executes the intent by initiating the full BLE preset sequence.
-    /// Since real BLE communication is asynchronous and hardware-dependent,
-    /// this returns a dialog indicating the action was initiated.
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let preset = preset else {
-            return .result(dialog: "No preset selected. Please choose a location preset.")
+        guard let elevator = elevator else {
+            return .result(dialog: "No elevator selected. Please choose an elevator.")
         }
 
-        // Donate a user activity for future shortcut suggestions (Requirement 11.5)
-        donateActivity(presetName: preset.name, action: "goToFloor")
+        donateActivity(elevatorName: elevator.name, action: "goToFloor")
 
-        return .result(dialog: "Going to \(preset.name)...")
+        return .result(dialog: "Going to floor with \(elevator.name)...")
     }
 
-    /// Donates a user activity to improve shortcut suggestions.
-    private func donateActivity(presetName: String, action: String) {
-        // NSUserActivity donation for Siri suggestions (Requirement 11.4, 11.5)
+    private func donateActivity(elevatorName: String, action: String) {
         let activity = NSUserActivity(activityType: "com.lcgremote.goToFloor")
-        activity.title = "Go to Floor — \(presetName)"
+        activity.title = "Go to Floor — \(elevatorName)"
         activity.isEligibleForSearch = true
         #if os(iOS) || os(watchOS)
         activity.isEligibleForPrediction = true

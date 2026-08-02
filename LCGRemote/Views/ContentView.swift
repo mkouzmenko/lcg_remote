@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Root view — single screen with the unified button grid.
+/// Root view — single screen with the unified elevator button grid.
 /// Gear icon in toolbar leads to Settings/Configuration.
 struct ContentView: View {
     @EnvironmentObject var bleService: BLEService
@@ -24,7 +24,7 @@ struct ContentView: View {
                     } label: {
                         Image(systemName: "gearshape")
                             .accessibilityLabel("Settings")
-                            .accessibilityHint("Double-tap to open settings and button configuration")
+                            .accessibilityHint("Double-tap to open settings and elevator configuration")
                     }
                 }
             }

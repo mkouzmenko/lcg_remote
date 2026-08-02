@@ -25,33 +25,14 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
 
     // MARK: - Internal State
 
-    /// The underlying CoreBluetooth manager.
     private let bleManager: BLEManager
-
-    /// Lookup dictionary mapping BLEDevice.id (UUID string) to the original DiscoveredDevice.
-    /// Used to resolve the CBPeripheral when connect(to:) is called with a BLEDevice.
     private var discoveredDeviceLookup: [String: DiscoveredDevice] = [:]
-
-    /// Combine subscriptions.
     private var cancellables = Set<AnyCancellable>()
-
-    /// Task for the 5-second command timeout.
     private var commandTimeoutTask: Task<Void, Never>?
-
-    /// Task for auto-resetting status back to idle after done/error.
     private var statusResetTask: Task<Void, Never>?
-
-    /// Tracks reconnection attempts for the current device.
     private var reconnectCount: Int = 0
-
-    /// Maximum number of automatic reconnection attempts.
     private let maxReconnectAttempts = 3
-
-    /// Flag indicating whether the user initiated the disconnect.
-    /// When true, auto-reconnect is suppressed.
     private var isUserDisconnect = false
-
-    /// The device currently being connected to (used for reconnect).
     private var lastConnectedBLEDevice: BLEDevice?
 
     // MARK: - Initialization
@@ -63,9 +44,7 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
 
     // MARK: - Bindings
 
-    /// Sets up Combine subscriptions to forward BLEManager state to protocol properties.
     private func setupBindings() {
-        // Forward isScanning
         bleManager.$isScanning
             .receive(on: DispatchQueue.main)
             .sink { [weak self] scanning in
@@ -73,12 +52,10 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             }
             .store(in: &cancellables)
 
-        // Map discoveredDevices from DiscoveredDevice to BLEDevice
         bleManager.$discoveredDevices
             .receive(on: DispatchQueue.main)
             .sink { [weak self] discovered in
                 guard let self = self else { return }
-                // Update lookup dictionary
                 var lookup: [String: DiscoveredDevice] = [:]
                 var bleDevices: [BLEDevice] = []
                 for device in discovered {
@@ -91,16 +68,13 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             }
             .store(in: &cancellables)
 
-        // Monitor Bluetooth state for error messages
         bleManager.$bluetoothState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                guard let self = self else { return }
-                self.handleBluetoothStateChange(state)
+                self?.handleBluetoothStateChange(state)
             }
             .store(in: &cancellables)
 
-        // Subscribe to connectedInterior to update connectedDevice
         bleManager.$connectedInterior
             .receive(on: DispatchQueue.main)
             .sink { [weak self] interior in
@@ -115,13 +89,11 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                     )
                     self.connectedDevice = bleDevice
                 } else {
-                    // Interior disconnected — handle unexpected disconnect
                     self.handleDeviceDisconnected()
                 }
             }
             .store(in: &cancellables)
 
-        // Subscribe to connectedExterior to update connectedDevice
         bleManager.$connectedExterior
             .receive(on: DispatchQueue.main)
             .sink { [weak self] exterior in
@@ -136,51 +108,41 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                     )
                     self.connectedDevice = bleDevice
                 } else {
-                    // Exterior disconnected — handle unexpected disconnect
                     self.handleDeviceDisconnected()
                 }
             }
             .store(in: &cancellables)
 
-        // Subscribe to status notifications and map bytes to BLEDeviceStatus
         bleManager.statusNotificationSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                guard let self = self else { return }
-                self.handleStatusNotification(data: notification.data)
+                self?.handleStatusNotification(data: notification.data)
             }
             .store(in: &cancellables)
     }
 
     // MARK: - Disconnection Handling
 
-    /// Handles unexpected disconnection by attempting auto-reconnect.
     private func handleDeviceDisconnected() {
-        // If both interior and exterior are nil, device is truly disconnected
         guard bleManager.connectedInterior == nil && bleManager.connectedExterior == nil else {
             return
         }
 
-        // If user initiated disconnect, skip auto-reconnect
         guard !isUserDisconnect else {
             isUserDisconnect = false
             return
         }
 
-        // Auto-reconnect logic
         if reconnectCount < maxReconnectAttempts, let device = lastConnectedBLEDevice {
             reconnectCount += 1
             connectionState = .connecting
             statusMessage = "Reconnecting... (attempt \(reconnectCount)/\(maxReconnectAttempts))"
 
-            // Attempt reconnection
             Task {
-                // Small delay before reconnect attempt
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 self.connect(to: device)
             }
         } else {
-            // Exhausted reconnect attempts or no device to reconnect to
             connectedDevice = nil
             connectionState = .disconnected
             deviceStatus = .idle
@@ -192,7 +154,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
 
     // MARK: - Bluetooth State Handling
 
-    /// Updates statusMessage based on the current Bluetooth hardware state.
     private func handleBluetoothStateChange(_ state: CBManagerState) {
         switch state {
         case .unauthorized:
@@ -202,7 +163,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             statusMessage = "Bluetooth is not available"
             connectionState = .disconnected
         case .poweredOn:
-            // Clear any previous Bluetooth-related error messages
             if statusMessage == "Bluetooth is not available" ||
                statusMessage == "Bluetooth permission denied. Enable in Settings." {
                 statusMessage = ""
@@ -217,7 +177,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
     // MARK: - Scanning
 
     func startScan() {
-        // Block scan if Bluetooth is unauthorized
         guard bleManager.bluetoothState != .unauthorized else {
             statusMessage = "Bluetooth permission denied. Enable in Settings."
             return
@@ -249,8 +208,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         Task {
             do {
                 try await bleManager.connect(to: discoveredDevice)
-                // Connection successful — state will be updated via
-                // the connectedInterior/connectedExterior subscription
                 self.connectionState = .connected
                 self.reconnectCount = 0
                 self.statusMessage = ""
@@ -269,7 +226,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         isUserDisconnect = true
         reconnectCount = 0
 
-        // Disconnect from currently connected device(s)
         if let interior = bleManager.connectedInterior {
             bleManager.disconnect(from: interior)
         }
@@ -277,7 +233,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             bleManager.disconnect(from: exterior)
         }
 
-        // Reset published state to defaults
         connectedDevice = nil
         connectionState = .disconnected
         deviceStatus = .idle
@@ -285,7 +240,155 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         lastConnectedBLEDevice = nil
     }
 
-    // MARK: - Commands
+    // MARK: - Elevator Commands
+
+    func sendFloorCommand(elevator: ElevatorConfig, button: FloorButtonConfig) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        Task {
+            let targetDeviceID = elevator.interiorDeviceID
+
+            // Find the device
+            var discoveredDevice = findDevice(deviceID: targetDeviceID, name: elevator.interiorDeviceName, unitType: .interior)
+
+            // If not found, scan for up to 8 seconds
+            if discoveredDevice == nil {
+                bleManager.startScan()
+                for _ in 0..<16 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    if let found = findDevice(deviceID: targetDeviceID, name: elevator.interiorDeviceName, unitType: .interior) {
+                        discoveredDevice = found
+                        break
+                    }
+                }
+                bleManager.stopScan()
+            }
+
+            guard let device = discoveredDevice else {
+                self.deviceStatus = .error
+                self.statusMessage = "Interior device not found. Check Settings."
+                self.scheduleAutoReset()
+                return
+            }
+
+            // Disconnect existing connections
+            if let interior = bleManager.connectedInterior {
+                bleManager.disconnect(from: interior)
+            }
+            if let exterior = bleManager.connectedExterior {
+                bleManager.disconnect(from: exterior)
+            }
+
+            // Connect
+            do {
+                try await bleManager.connect(to: device)
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Connection failed."
+                self.scheduleAutoReset()
+                return
+            }
+
+            self.connectionState = .connected
+            self.statusMessage = "Pressing button..."
+
+            // Send command
+            let peripheral = device.peripheral
+            do {
+                let chunks = try CommandEncoder.encodeFloorCommand(
+                    x: UInt8(button.x),
+                    y: UInt8(button.y),
+                    z: UInt8(button.z)
+                )
+                for chunk in chunks {
+                    try await bleManager.write(data: chunk, to: peripheral)
+                }
+                self.deviceStatus = .done
+                self.statusMessage = "Floor selected"
+                self.scheduleAutoReset()
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                self.scheduleAutoReset()
+            }
+        }
+    }
+
+    func sendExteriorCommand(button: ExteriorButtonConfig) {
+        deviceStatus = .busy
+        statusMessage = "Connecting..."
+
+        Task {
+            let targetDeviceID = button.deviceID
+
+            // Find the device
+            var discoveredDevice = findDevice(deviceID: targetDeviceID, name: button.deviceName, unitType: .exterior)
+
+            // If not found, scan for up to 8 seconds
+            if discoveredDevice == nil {
+                bleManager.startScan()
+                for _ in 0..<16 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    if let found = findDevice(deviceID: targetDeviceID, name: button.deviceName, unitType: .exterior) {
+                        discoveredDevice = found
+                        break
+                    }
+                }
+                bleManager.stopScan()
+            }
+
+            guard let device = discoveredDevice else {
+                self.deviceStatus = .error
+                self.statusMessage = "Exterior device not found. Check Settings."
+                self.scheduleAutoReset()
+                return
+            }
+
+            // Disconnect existing connections
+            if let interior = bleManager.connectedInterior {
+                bleManager.disconnect(from: interior)
+            }
+            if let exterior = bleManager.connectedExterior {
+                bleManager.disconnect(from: exterior)
+            }
+
+            // Connect
+            do {
+                try await bleManager.connect(to: device)
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Connection failed."
+                self.scheduleAutoReset()
+                return
+            }
+
+            self.connectionState = .connected
+            self.statusMessage = "Calling elevator..."
+
+            // Send command
+            let peripheral = device.peripheral
+            do {
+                let chunks = try CommandEncoder.encodeFloorCommand(
+                    x: UInt8(button.x),
+                    y: UInt8(button.y),
+                    z: UInt8(button.z)
+                )
+                for chunk in chunks {
+                    try await bleManager.write(data: chunk, to: peripheral)
+                }
+                self.deviceStatus = .done
+                self.statusMessage = "Elevator called"
+                self.scheduleAutoReset()
+            } catch {
+                self.deviceStatus = .error
+                self.statusMessage = "Command failed. Please retry."
+                self.scheduleAutoReset()
+            }
+        }
+    }
+
+    // MARK: - Legacy Commands
 
     func executeFloorCommand(profile: FloorProfile) {
         guard let interior = bleManager.connectedInterior else {
@@ -308,8 +411,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 for chunk in chunks {
                     try await bleManager.write(data: chunk, to: interior.peripheral)
                 }
-                // Command sent successfully — show done immediately
-                // (hardware doesn't send status notifications)
                 self.deviceStatus = .done
                 self.statusMessage = "Floor selected"
                 self.scheduleAutoReset()
@@ -334,7 +435,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
 
         Task {
             do {
-                // If call button profile is calibrated, send X/Y/Z coordinates (same as floor command)
                 if let profile = callButtonProfile {
                     let chunks = try CommandEncoder.encodeFloorCommand(
                         x: UInt8(profile.x),
@@ -345,11 +445,9 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                         try await bleManager.write(data: chunk, to: exterior.peripheral)
                     }
                 } else {
-                    // Fallback: send simple call command (push duration only)
                     let data = CommandEncoder.encodeCallCommand()
                     try await bleManager.write(data: data, to: exterior.peripheral)
                 }
-                // Command sent successfully — show done immediately
                 self.deviceStatus = .done
                 self.statusMessage = "Command sent"
                 self.scheduleAutoReset()
@@ -361,123 +459,23 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    // MARK: - Unified Button Command
+    // MARK: - Helpers
 
-    func sendCommand(buttonConfig: ButtonConfig) {
-        deviceStatus = .busy
-        statusMessage = "Connecting..."
-
-        Task {
-            // 1. Load device group config
-            let persistenceService = JSONPersistenceService()
-            let deviceGroups = persistenceService.loadDeviceGroups()
-
-            // 2. Determine target device ID and name from groups
-            let targetDeviceID: String?
-            let targetName: String?
-            switch buttonConfig.deviceType {
-            case .interior:
-                targetDeviceID = deviceGroups.interiorDeviceID
-                targetName = deviceGroups.interiorDeviceName
-            case .exterior:
-                targetDeviceID = deviceGroups.exteriorDeviceID
-                targetName = deviceGroups.exteriorDeviceName
-            }
-
-            // 3. Find the DiscoveredDevice using priority: ID → name → type
-            var discoveredDevice: DiscoveredDevice? = findDevice(
-                deviceID: targetDeviceID,
-                name: targetName,
-                unitType: buttonConfig.deviceType
-            )
-
-            // 4. If not found, scan for 8 seconds and retry
-            if discoveredDevice == nil {
-                bleManager.startScan()
-                for _ in 0..<16 {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    if let found = findDevice(deviceID: targetDeviceID, name: targetName, unitType: buttonConfig.deviceType) {
-                        discoveredDevice = found
-                        break
-                    }
-                }
-                bleManager.stopScan()
-            }
-
-            // 5. If still not found, show error and return
-            guard let device = discoveredDevice else {
-                self.deviceStatus = .error
-                self.statusMessage = "Device not found. Tap Scan in Settings."
-                self.scheduleAutoReset()
-                return
-            }
-
-            // 6. Disconnect ALL existing connections before connecting
-            if let interior = bleManager.connectedInterior {
-                bleManager.disconnect(from: interior)
-            }
-            if let exterior = bleManager.connectedExterior {
-                bleManager.disconnect(from: exterior)
-            }
-
-            // 7. Connect to the found device
-            do {
-                try await bleManager.connect(to: device)
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Connection failed."
-                self.scheduleAutoReset()
-                return
-            }
-
-            self.connectionState = .connected
-            self.statusMessage = "Sending command..."
-
-            // 9. Write X, Y, Z as 3 sequential raw bytes directly to the peripheral
-            let peripheral = device.peripheral
-            do {
-                let chunks = try CommandEncoder.encodeFloorCommand(
-                    x: UInt8(buttonConfig.x),
-                    y: UInt8(buttonConfig.y),
-                    z: UInt8(buttonConfig.z)
-                )
-                for chunk in chunks {
-                    try await bleManager.write(data: chunk, to: peripheral)
-                }
-                // 10. Show done status and auto-reset
-                self.deviceStatus = .done
-                self.statusMessage = buttonConfig.deviceType == .exterior ? "Elevator called" : "Floor selected"
-                self.scheduleAutoReset()
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Command failed. Please retry."
-                self.scheduleAutoReset()
-            }
-        }
-    }
-
-    /// Finds a DiscoveredDevice using priority: deviceID → name → unitType.
     private func findDevice(deviceID: String?, name: String?, unitType: UnitType) -> DiscoveredDevice? {
-        // a. Look up by deviceID
         if let id = deviceID, let found = discoveredDeviceLookup[id] {
             return found
         }
-        // b. Look up by name
         if let name = name, let found = discoveredDeviceLookup.values.first(where: { $0.name == name }) {
             return found
         }
-        // c. Look up by type (first device with matching unitType)
         return discoveredDeviceLookup.values.first { $0.unitType == unitType }
     }
 
     // MARK: - Status Notification Handling
 
-    /// Processes a status notification from the connected device.
-    /// Maps the first byte to a DeviceState, then to BLEDeviceStatus.
     private func handleStatusNotification(data: Data) {
         guard let firstByte = data.first else { return }
 
-        // Cancel the command timeout since we received a notification
         commandTimeoutTask?.cancel()
         commandTimeoutTask = nil
 
@@ -500,38 +498,17 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    // MARK: - Command Timeout
-
-    /// Starts a 5-second timeout. If no status notification is received within
-    /// that window, sets deviceStatus to .error with a timeout message.
-    private func startCommandTimeout() {
-        commandTimeoutTask?.cancel()
-        commandTimeoutTask = Task { [weak self] in
-            do {
-                try await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-                guard let self = self, !Task.isCancelled else { return }
-                self.deviceStatus = .error
-                self.statusMessage = "Command timed out"
-                self.scheduleAutoReset()
-            } catch {
-                // Task was cancelled — notification was received in time
-            }
-        }
-    }
-
     // MARK: - Auto-Reset
 
-    /// Schedules an automatic reset of deviceStatus to .idle.
-    /// .done resets after 1 second, .error resets after 2 seconds.
     private func scheduleAutoReset() {
         statusResetTask?.cancel()
 
         let delayNanoseconds: UInt64
         switch deviceStatus {
         case .done:
-            delayNanoseconds = 1_000_000_000 // 1 second
+            delayNanoseconds = 1_000_000_000
         case .error:
-            delayNanoseconds = 2_000_000_000 // 2 seconds
+            delayNanoseconds = 2_000_000_000
         default:
             return
         }
@@ -548,151 +525,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         }
     }
 
-    // MARK: - Auto-Connect Commands
-
-    func connectAndExecuteFloor(deviceID: String, profile: FloorProfile) {
-        deviceStatus = .busy
-        statusMessage = "Connecting..."
-
-        Task {
-            // Look up device from last scan or trigger a quick scan
-            var discoveredDevice = discoveredDeviceLookup[deviceID]
-            if discoveredDevice == nil {
-                bleManager.startScan()
-                // Wait up to 8 seconds for the device to appear
-                for _ in 0..<16 {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    if let found = discoveredDeviceLookup[deviceID] {
-                        discoveredDevice = found
-                        break
-                    }
-                }
-                bleManager.stopScan()
-            }
-
-            guard let device = discoveredDevice else {
-                self.deviceStatus = .error
-                self.statusMessage = "Device not found. Check Settings."
-                self.scheduleAutoReset()
-                return
-            }
-
-            // Connect
-            do {
-                try await bleManager.connect(to: device)
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Connection failed."
-                self.scheduleAutoReset()
-                return
-            }
-
-            self.connectionState = .connected
-
-            // Determine the peripheral to write to
-            let peripheral: CBPeripheral
-            if let interior = bleManager.connectedInterior, interior.id == device.id {
-                peripheral = interior.peripheral
-            } else if let exterior = bleManager.connectedExterior, exterior.id == device.id {
-                peripheral = exterior.peripheral
-            } else {
-                peripheral = device.peripheral
-            }
-
-            // Send floor command
-            self.statusMessage = "Pressing button..."
-            do {
-                let chunks = try CommandEncoder.encodeFloorCommand(
-                    x: UInt8(profile.x),
-                    y: UInt8(profile.y),
-                    z: UInt8(profile.z)
-                )
-                for chunk in chunks {
-                    try await bleManager.write(data: chunk, to: peripheral)
-                }
-                self.deviceStatus = .done
-                self.statusMessage = "Floor selected"
-                self.scheduleAutoReset()
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Command failed. Please retry."
-                self.scheduleAutoReset()
-            }
-        }
-    }
-
-    func connectAndExecuteCall(deviceID: String, profile: FloorProfile) {
-        deviceStatus = .busy
-        statusMessage = "Connecting..."
-
-        Task {
-            // Look up device from last scan or trigger a quick scan
-            var discoveredDevice = discoveredDeviceLookup[deviceID]
-            if discoveredDevice == nil {
-                bleManager.startScan()
-                for _ in 0..<16 {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    if let found = discoveredDeviceLookup[deviceID] {
-                        discoveredDevice = found
-                        break
-                    }
-                }
-                bleManager.stopScan()
-            }
-
-            guard let device = discoveredDevice else {
-                self.deviceStatus = .error
-                self.statusMessage = "Device not found. Check Settings."
-                self.scheduleAutoReset()
-                return
-            }
-
-            // Connect
-            do {
-                try await bleManager.connect(to: device)
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Connection failed."
-                self.scheduleAutoReset()
-                return
-            }
-
-            self.connectionState = .connected
-
-            // Determine the peripheral to write to
-            let peripheral: CBPeripheral
-            if let exterior = bleManager.connectedExterior, exterior.id == device.id {
-                peripheral = exterior.peripheral
-            } else if let interior = bleManager.connectedInterior, interior.id == device.id {
-                peripheral = interior.peripheral
-            } else {
-                peripheral = device.peripheral
-            }
-
-            // Send call command using profile coordinates
-            self.statusMessage = "Calling elevator..."
-            do {
-                let chunks = try CommandEncoder.encodeFloorCommand(
-                    x: UInt8(profile.x),
-                    y: UInt8(profile.y),
-                    z: UInt8(profile.z)
-                )
-                for chunk in chunks {
-                    try await bleManager.write(data: chunk, to: peripheral)
-                }
-                self.deviceStatus = .done
-                self.statusMessage = "Elevator called"
-                self.scheduleAutoReset()
-            } catch {
-                self.deviceStatus = .error
-                self.statusMessage = "Command failed. Please retry."
-                self.scheduleAutoReset()
-            }
-        }
-    }
-
     // MARK: - Preset Execution
 
     func executePresetSequence(
@@ -701,14 +533,11 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
         completion: @escaping (Bool) -> Void
     ) {
         Task {
-            // Auto-scan if needed devices aren't in the lookup
             let needsExterior = preset.exteriorDeviceID != nil && discoveredDeviceLookup[preset.exteriorDeviceID!] == nil
             let needsInterior = preset.interiorDeviceID != nil && discoveredDeviceLookup[preset.interiorDeviceID!] == nil
 
             if needsExterior || needsInterior {
-                // Scan for devices before executing
                 bleManager.startScan()
-                // Wait up to 8 seconds for devices to appear
                 for _ in 0..<16 {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     let foundExterior = preset.exteriorDeviceID == nil || discoveredDeviceLookup[preset.exteriorDeviceID!] != nil
@@ -718,19 +547,17 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 bleManager.stopScan()
             }
 
-            // Step 1: Connect to the Exterior device
             onPhaseChange(.connectingExterior)
 
             guard let exteriorID = preset.exteriorDeviceID,
                   let exteriorDiscovered = discoveredDeviceLookup[exteriorID] else {
-                statusMessage = "Exterior device not found. Try scanning first."
+                statusMessage = "Exterior device not found."
                 completion(false)
                 return
             }
 
             do {
                 try await bleManager.connect(to: exteriorDiscovered)
-                // Wait for characteristic discovery to complete
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
             } catch {
                 statusMessage = "Failed to connect to exterior device."
@@ -738,7 +565,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 return
             }
 
-            // Step 2: Send call command to the Exterior device
             onPhaseChange(.callingElevator)
 
             guard let exteriorDevice = bleManager.connectedExterior else {
@@ -748,7 +574,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
             }
 
             do {
-                // Use calibrated coordinates if available
                 if let profile = callButtonProfile {
                     let chunks = try CommandEncoder.encodeFloorCommand(
                         x: UInt8(profile.x),
@@ -768,11 +593,8 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 return
             }
 
-            // Wait for exterior unit to complete its movement
-            // Hardware doesn't send status notifications, so use a fixed delay
             try? await Task.sleep(nanoseconds: 5_000_000_000)
 
-            // Step 3: Connect to the Interior device
             onPhaseChange(.connectingInterior)
 
             guard let interiorID = preset.interiorDeviceID,
@@ -784,7 +606,6 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
 
             do {
                 try await bleManager.connect(to: interiorDiscovered)
-                // Wait for characteristic discovery to complete
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
             } catch {
                 statusMessage = "Failed to connect to interior device."
@@ -792,14 +613,11 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                 return
             }
 
-            // Step 4: Send floor command to the Interior device
             onPhaseChange(.selectingFloor)
 
-            // Use the peripheral directly rather than relying on connectedInterior classification
             let interiorPeripheral = interiorDiscovered.peripheral
 
-            if let floorProfileID = preset.targetFloorProfileID,
-               let profile = resolveFloorProfile(id: floorProfileID) {
+            if let profile = callButtonProfile {
                 do {
                     let chunks = try CommandEncoder.encodeFloorCommand(
                         x: UInt8(profile.x),
@@ -814,91 +632,11 @@ final class BLEAdapter: ObservableObject, BLEServiceProtocol {
                     completion(false)
                     return
                 }
-            } else if preset.targetFloorProfileID != nil {
-                // Floor profile was specified but not found — try using the first available profile
-                let persistenceService = JSONPersistenceService()
-                let buttonMaps = persistenceService.loadButtonMaps()
-                if let firstProfile = buttonMaps.first?.profiles.first {
-                    do {
-                        let chunks = try CommandEncoder.encodeFloorCommand(
-                            x: UInt8(firstProfile.x),
-                            y: UInt8(firstProfile.y),
-                            z: UInt8(firstProfile.z)
-                        )
-                        for chunk in chunks {
-                            try await bleManager.write(data: chunk, to: interiorPeripheral)
-                        }
-                    } catch {
-                        statusMessage = "Floor command failed."
-                        completion(false)
-                        return
-                    }
-                } else {
-                    // No profiles at all — skip floor selection, still succeed
-                    statusMessage = "No floor profiles configured."
-                }
-            }
-            // If no targetFloorProfileID set, use the first available floor profile
-            if preset.targetFloorProfileID == nil {
-                let persistenceService = JSONPersistenceService()
-                let buttonMaps = persistenceService.loadButtonMaps()
-                if let firstProfile = buttonMaps.first?.profiles.first {
-                    do {
-                        let chunks = try CommandEncoder.encodeFloorCommand(
-                            x: UInt8(firstProfile.x),
-                            y: UInt8(firstProfile.y),
-                            z: UInt8(firstProfile.z)
-                        )
-                        for chunk in chunks {
-                            try await bleManager.write(data: chunk, to: interiorPeripheral)
-                        }
-                    } catch {
-                        statusMessage = "Floor command failed."
-                        completion(false)
-                        return
-                    }
-                }
             }
 
-            // Step 5: All steps completed successfully
             onPhaseChange(.done)
             completion(true)
         }
-    }
-
-    // MARK: - Wait for Device Idle
-
-    /// Waits for the device status to return to idle (indicating movement complete).
-    /// Returns true if idle was reached, false on timeout.
-    private func waitForDeviceIdle(timeout: TimeInterval) async -> Bool {
-        let startTime = Date()
-        // Small initial delay to let the command start
-        try? await Task.sleep(nanoseconds: 500_000_000)
-        
-        while Date().timeIntervalSince(startTime) < timeout {
-            if deviceStatus == .done || deviceStatus == .idle {
-                // Give a small buffer after done
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                return true
-            }
-            try? await Task.sleep(nanoseconds: 250_000_000)
-        }
-        return false
-    }
-
-    // MARK: - Floor Profile Resolution
-
-    /// Resolves a FloorProfile by its UUID from persisted button maps.
-    /// Searches all saved ButtonMaps for a profile matching the given ID.
-    private nonisolated func resolveFloorProfile(id: UUID) -> FloorProfile? {
-        let persistenceService = JSONPersistenceService()
-        let buttonMaps = persistenceService.loadButtonMaps()
-        for buttonMap in buttonMaps {
-            if let profile = buttonMap.profiles.first(where: { $0.id == id }) {
-                return profile
-            }
-        }
-        return nil
     }
 }
 
